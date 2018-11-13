@@ -14,16 +14,21 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('--max', default=3000000)
 parser.add_argument('--embdim', default=300)
-
+parser.add_argument('--local', default=False, action='store_true')
 args = parser.parse_args()
 
-FILE_NAME = "/content/gdrive/My Drive/GoogleNews-vectors-negative300.bin.gz" # outputs GoogleNews-vectors-negative300.bin.gz.txt
-SAVE_TO = "./.vector_cache/GoogleNews-vectors-negative300.bin.gz"
+if args.local:
+    FILE_NAME = ".vector_cache/GoogleNews-vectors-negative300.bin.gz" # outputs GoogleNews-vectors-negative300.bin.gz.txt
+    SAVE_TO = ".vector_cache/GoogleNews-vectors-negative300.bin.gz"
+else:
+    FILE_NAME = "/content/gdrive/My Drive/GoogleNews-vectors-negative300.bin.gz" # outputs GoogleNews-vectors-negative300.bin.gz.txt
+    SAVE_TO = "./.vector_cache/GoogleNews-vectors-negative300.bin.gz"
+    
 MAX_VECTORS = int(args.max) # Top words to take
 FLOAT_SIZE = 4 # 32bit float
 emb_dim = int(args.embdim)
 
-output_file_name = FILE_NAME + ".txt"
+output_file_name = SAVE_TO + ".txt"
 
 with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'wb') as f_out:
     
