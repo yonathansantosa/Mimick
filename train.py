@@ -140,7 +140,7 @@ step = start
 # *Training
 word_embedding = dataset.embedding_vectors.to(device)
 for epoch in tqdm(range(start, max_epoch)):
-    for it, (X, y) in enumerate(tqdm(train_loader)):
+    for it, (X, y) in enumerate(train_loader):
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words)
 
@@ -211,7 +211,7 @@ for epoch in tqdm(range(start, max_epoch)):
             nearest_neighbor = nearest_neighbor[:, :5]
             dist = dist[:, :5].data.cpu().numpy()
 
-            tqdm.write('%.4f | ' % loss_dist[0] + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
+            tqdm.write('%d %.4f | ' % (it, loss_dist[0]) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
             tqdm.write('')
         # if it == 1: break
