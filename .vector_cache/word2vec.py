@@ -17,7 +17,7 @@ parser.add_argument('--embdim', default=300)
 
 args = parser.parse_args()
 
-FILE_NAME = "/content/gdrive/GoogleNews-vectors-negative300.bin.gz" # outputs GoogleNews-vectors-negative300.bin.gz.txt
+FILE_NAME = "/content/gdrive/My\ Drive/GoogleNews-vectors-negative300.bin.gz" # outputs GoogleNews-vectors-negative300.bin.gz.txt
 SAVE_TO = "./.vector_cache/GoogleNews-vectors-negative300.bin.gz"
 MAX_VECTORS = int(args.max) # Top words to take
 FLOAT_SIZE = 4 # 32bit float
