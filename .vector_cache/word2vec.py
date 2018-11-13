@@ -12,12 +12,13 @@ parser = argparse.ArgumentParser(
     description='Conditional Text Generation: Train Discriminator'
 )
 
-parser.add_argument('--max', default=10000)
+parser.add_argument('--max', default=3000000)
 parser.add_argument('--embdim', default=300)
 
 args = parser.parse_args()
 
-FILE_NAME = "GoogleNews-vectors-negative300.bin.gz" # outputs GoogleNews-vectors-negative300.bin.gz.txt
+FILE_NAME = "/content/gdrive/GoogleNews-vectors-negative300.bin.gz" # outputs GoogleNews-vectors-negative300.bin.gz.txt
+SAVE_TO = "./.vector_cache/GoogleNews-vectors-negative300.bin.gz"
 MAX_VECTORS = int(args.max) # Top words to take
 FLOAT_SIZE = 4 # 32bit float
 emb_dim = int(args.embdim)
