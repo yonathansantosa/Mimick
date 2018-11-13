@@ -56,6 +56,7 @@ with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'w') as f_out:
             c = f.read(1)
             if c == b" ":
                 break
+            print(c)
             word += c.decode('utf8')
 
         binary_vector = f.read(FLOAT_SIZE * vector_len)
