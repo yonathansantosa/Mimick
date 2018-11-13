@@ -37,12 +37,9 @@ with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'w') as f_out:
     
     # read the header
     header = ""
-    # while c != "\n":
-    # print(next(f))
-    # next(f)
-    for c in f:
+    while c != b"\n":
+        c = f.read(1)
         header += c.decode('utf8')
-        break
     
     print(header.split())
 
