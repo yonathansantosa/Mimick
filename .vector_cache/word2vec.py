@@ -25,15 +25,15 @@ emb_dim = int(args.embdim)
 
 output_file_name = FILE_NAME + ".txt"
 
-with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'w') as f_out:
+with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'wb') as f_out:
     
     c = None
     
     # read the header
-    header = ""
+    header = b""
     while c != "\n":
         c = f.read(1)
-        header += c.encode('utf-8')
+        header += c
 
     total_num_vectors, vector_len = (int(x) for x in header.split())
     num_vectors = min(MAX_VECTORS, total_num_vectors)
