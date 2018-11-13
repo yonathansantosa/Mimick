@@ -33,7 +33,7 @@ with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'w') as f_out:
     header = ""
     while c != "\n":
         c = f.read(1)
-        header += c
+        header += c.decode('utf-8')
 
     total_num_vectors, vector_len = (int(x) for x in header.split())
     num_vectors = min(MAX_VECTORS, total_num_vectors)
