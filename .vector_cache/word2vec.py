@@ -33,13 +33,13 @@ with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'w') as f_out:
     header = ""
     while c != "\n":
         c = f.read(1)
-        header += c.decode('utf-8')
+        header += c.encode('utf-8')
 
     total_num_vectors, vector_len = (int(x) for x in header.split())
     num_vectors = min(MAX_VECTORS, total_num_vectors)
 
-    print "Taking embeddings of top %d words (out of %d total)" % (num_vectors, total_num_vectors)
-    print "Embedding size: %d" % emb_dim
+    print("Taking embeddings of top %d words (out of %d total)" % (num_vectors, total_num_vectors))
+    print("Embedding size: %d" % emb_dim)
 
     for j in xrange(num_vectors):
         word = ""        
@@ -63,5 +63,5 @@ with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'w') as f_out:
         if (j + 1) == num_vectors:
             break
             
-print "\nDONE!"
-print "Output written to %s" % output_file_name
+print("\nDONE!")
+print("Output written to %s" % output_file_name)
