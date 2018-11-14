@@ -63,6 +63,8 @@ parser.add_argument('--model', default='lstm',
                     help='choose which mimick model')
 parser.add_argument('--lr', default=0.1,
                     help='learning rate')
+parser.add_argument('--charlen', default=20,
+                    help='maximum length')
 parser.add_argument('--embedding', default='polyglot')
 
 args = parser.parse_args()
@@ -77,7 +79,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # *Parameters
 char_emb_dim = 300
-char_max_len = 20
+char_max_len = int(args.charlen)
 word_emb_dim = 64
 random_seed = 64
 shuffle_dataset = False
