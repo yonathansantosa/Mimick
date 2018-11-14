@@ -211,7 +211,7 @@ for epoch in tqdm(range(max_epoch)):
             nearest_neighbor = nearest_neighbor[:, :5]
             dist = dist[:, :5].data.cpu().numpy()
 
-            tqdm.write('%d %.4f | ' % (it, loss_dist[0]) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
+            tqdm.write('%d %.4f | ' % (step, loss_dist[0]) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
             tqdm.write('')
         # if it == 1: break
