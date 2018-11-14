@@ -5,6 +5,7 @@ import struct
 import sys
 import gzip
 import binascii
+import re
 
 import argparse
 
@@ -62,13 +63,15 @@ with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'w', encoding='utf-
                 cont = True
                 continue
             word += c.decode('utf8', 'ignore')
+        
         binary_vector = f.read(FLOAT_SIZE * vector_len)
         txt_vector = [ "%s" % struct.unpack_from('f', binary_vector, i)[0] 
                    for i in range(0, len(binary_vector), FLOAT_SIZE) ]
         txt_vector = txt_vector[:emb_dim]
         # print(txt_vector)
         
-        f_out.write("%s %s\n" % (word, " ".join(txt_vector)))
+        if re.findall('_', word) == []:
+            f_out.write("%s %s\n" % (word, " ".join(txt_vector)))
         
         sys.stdout.write("%d%%\r" % ((j + 1) / num_vectors * 100))
         sys.stdout.flush()
