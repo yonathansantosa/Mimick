@@ -66,13 +66,14 @@ parser.add_argument('--lr', default=0.1,
 parser.add_argument('--charlen', default=20,
                     help='maximum length')
 parser.add_argument('--embedding', default='polyglot')
+parser.add_argument('--local', default=False, action='store_true')
 
 args = parser.parse_args()
 
 if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
 logger = Logger('./logs/%s/' % args.model)
-saved_model_path = '/content/gdrive/My Drive/trained_model_%s_%s/' % (args.lang, args.model)
+saved_model_path = 'trained_model_%s_%s/' % (args.lang, args.model) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s/' % (args.lang, args.model)
 
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
