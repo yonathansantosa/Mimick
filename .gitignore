@@ -1,0 +1,10 @@
+.data/
+embeddings2/
+logs/
+unipos/
+__pycache__/
+.vscode/
+trained_model_en_cnn/
+
+*.pt
+*.pth
