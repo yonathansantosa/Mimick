@@ -16,6 +16,7 @@ from tqdm import tqdm
 import os
 from logger import Logger
 import shutil
+import pickle
 
 def cosine_similarity(tensor1, tensor2):
     # tensor2 += 1.e-15
@@ -43,6 +44,14 @@ def l2_dist(tensor1, tensor2):
     all_dist = torch.stack(all_dist)
     return all_dist
 
+def save_iteration(iteration):
+    with open('iteration.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        pickle.dump(iteration, f)
+
+def load_iteration():
+    with open('iteration.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+        itx = pickle.load(f)
+    return itx
 
 # *Argument parser
 parser = argparse.ArgumentParser(
@@ -132,14 +141,16 @@ criterion = nn.CosineSimilarity()
 
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+step = start
 
 if not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
 else:
     if args.load:
         model.load_state_dict(torch.load('%slstm.pth' % saved_model_path))
+        if os.path.exists('iteration.pkl'): step = load_iteration()
 
-step = start
+
 
 # *Training
 word_embedding = dataset.embedding_vectors.to(device)
@@ -168,6 +179,7 @@ for epoch in tqdm(range(max_epoch)):
         info = {
             'loss-Train-%s' % args.model : loss.item(),
         }
+        save_iteration(step)
 
         step += 1
         for tag, value in info.items():
