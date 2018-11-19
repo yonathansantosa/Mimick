@@ -70,7 +70,7 @@ parser.add_argument('--local', default=False, action='store_true')
 
 args = parser.parse_args()
 
-if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
+# if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
 logger = Logger('./logs/%s/' % args.model)
 saved_model_path = 'trained_model_%s_%s/' % (args.lang, args.model) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s/' % (args.lang, args.model)
