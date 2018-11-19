@@ -159,7 +159,7 @@ for epoch in tqdm(range(max_epoch)):
         model.zero_grad()
 
         output = model.forward(inputs) # (batch x word_emb_dim)
-        loss = torch.mean(-criterion(output, target))
+        loss = torch.mean(-criterion(output, target)) + 1
         # print(loss)
 
         # ##################
