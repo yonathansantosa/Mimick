@@ -148,7 +148,7 @@ if not os.path.exists(saved_model_path):
 else:
     if args.load:
         model.load_state_dict(torch.load('%slstm.pth' % saved_model_path))
-        if os.path.exists('iteration.pkl'): step = load_iteration()
+        if os.path.exists('iteration.pkl') and start == 0: step = load_iteration()
 
 
 
