@@ -147,7 +147,7 @@ if not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
 else:
     if args.load:
-        model.load_state_dict(torch.load('%slstm.pth' % saved_model_path))
+        model.load_state_dict(torch.load('%s%s.pth' % (saved_model_path, args.model)))
         if os.path.exists('iteration.pkl') and start == 0: step = load_iteration()
 
 
