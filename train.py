@@ -126,17 +126,18 @@ else:
 
 model.to(device)
 
-criterion = nn.MSELoss()
+# criterion = nn.MSELoss()
 # criterion = nn.CrossEntropyLoss()
+criterion = nn.CosineSimilarity()
 
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 
-if not os.path.exists(saved_model_path): os.makedirs(saved_model_path)
-
-
-if args.load:
-    model.load_state_dict(torch.load('%slstm.pth' % saved_model_path))
+if not os.path.exists(saved_model_path):
+    os.makedirs(saved_model_path)
+else:
+    if args.load:
+        model.load_state_dict(torch.load('%slstm.pth' % saved_model_path))
 
 step = start
 
