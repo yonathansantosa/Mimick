@@ -45,11 +45,11 @@ def l2_dist(tensor1, tensor2):
     return all_dist
 
 def save_iteration(iteration):
-    with open('iteration.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+    with open('/content/gdrive/My Drive/iteration.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
         pickle.dump(iteration, f)
 
 def load_iteration():
-    with open('iteration.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+    with open('/content/gdrive/My Drive/iteration.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
         itx = pickle.load(f)
     return itx
 
@@ -148,7 +148,8 @@ if not os.path.exists(saved_model_path):
 else:
     if args.load:
         model.load_state_dict(torch.load('%s%s.pth' % (saved_model_path, args.model)))
-        if os.path.exists('iteration.pkl') and start == 0: step = load_iteration()
+        if os.path.exists('/content/gdrive/My Drive/iteration.pkl') and start == 0: 
+            step = load_iteration()
 
 
 
