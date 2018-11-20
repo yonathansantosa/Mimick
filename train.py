@@ -45,25 +45,9 @@ def l2_dist(tensor1, tensor2):
     return all_dist
 
 def save_iteration(iteration, local):
-    iteration_file = 'iteration.pkl'
+    iteration_file = 'iteration.pkl' if local else '/content/gdrive/My Drive/iteration.pkl'
     with open(iteration_file, 'wb') as f:
         pickle.dump(iteration, f)
-    if not local:
-        from pydrive.auth import GoogleAuth
-        from pydrive.drive import GoogleDrive
-        from google.colab import auth
-        from oauth2client.client import GoogleCredentials
-
-        # 1. Authenticate and create the PyDrive client.
-        auth.authenticate_user()
-        gauth = GoogleAuth()
-        gauth.credentials = GoogleCredentials.get_application_default()
-        drive = GoogleDrive(gauth)  
-
-        # get the folder id where you want to save your file
-        file = drive.CreateFile({'parents':[{u'id': folder_id}]})
-        file.SetContentFile('iteration.pkl')
-        file.Upload()
 
 def load_iteration(local):
     iteration_file = 'iteration.pkl' if local else '/content/gdrive/My Drive/iteration.pkl'
