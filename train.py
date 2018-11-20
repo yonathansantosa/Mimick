@@ -65,7 +65,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('--maxepoch', default=30,
                     help='maximum iteration (default=1000)')
-parser.add_argument('--epoch', default=0,
+parser.add_argument('--run', default=0,
                     help='starting epoch (default=1000)')
 parser.add_argument('--save', default=False, action='store_true',
                     help='whether to save model or not')
@@ -86,7 +86,7 @@ args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
-logger = Logger('./logs/')
+logger = Logger('./logs/%s/run%s/' % (args.model, args.run))
 saved_model_path = 'trained_model_%s_%s/' % (args.lang, args.model) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s/' % (args.lang, args.model)
 
 # *Device configuration
