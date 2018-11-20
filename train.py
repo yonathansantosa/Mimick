@@ -45,11 +45,13 @@ def l2_dist(tensor1, tensor2):
     return all_dist
 
 def save_iteration(iteration):
-    with open('/content/gdrive/My Drive/iteration.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+    iteration_file = 'iteration.pkl' if args.local else '/content/gdrive/My Drive/iteration.pkl'
+    with open(iteration_file, 'wb') as f:
         pickle.dump(iteration, f)
 
 def load_iteration():
-    with open('/content/gdrive/My Drive/iteration.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+    iteration_file = 'iteration.pkl' if args.local else '/content/gdrive/My Drive/iteration.pkl'
+    with open(iteration_file, 'rb') as f:
         itx = pickle.load(f)
     return itx
 
@@ -313,5 +315,5 @@ for epoch in tqdm(range(max_epoch)):
     model.train()
 
 
-    torch.save(model.state_dict(), '%slstm.pth' % saved_model_path)
+    torch.save(model.state_dict(), '%s%s.pth' % (saved_model_path, args.model))
     torch.save(char_embed.char_embedding.state_dict(), '%scharembed.pth' % saved_model_path)
