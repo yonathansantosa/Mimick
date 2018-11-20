@@ -49,6 +49,7 @@ def save_iteration(iteration, local):
     with open(iteration_file, 'wb') as f:
         pickle.dump(iteration, f)
     if not local:
+        from google.colab import files
         files.download(iteration_file)
 
 def load_iteration(local):
