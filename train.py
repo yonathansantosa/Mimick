@@ -67,7 +67,7 @@ def save_iteration(iteration, local):
 
 def load_iteration(local):
     iteration_file = 'iteration.pkl' if local else '/content/gdrive/My Drive/iteration.pkl'
-        with open(iteration_file, 'rb') as f:
+    with open(iteration_file, 'rb') as f:
         itx = pickle.load(f)
     return itx
 
