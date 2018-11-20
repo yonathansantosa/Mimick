@@ -86,7 +86,7 @@ args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
-logger = Logger('./logs/%s/run%s/' % (args.model, args.run))
+logger = Logger('./logs/%s_run%s/' % (args.model, args.run))
 saved_model_path = 'trained_model_%s_%s/' % (args.lang, args.model) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s/' % (args.lang, args.model)
 
 # *Device configuration
