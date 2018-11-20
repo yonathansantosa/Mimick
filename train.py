@@ -99,7 +99,6 @@ word_emb_dim = 64
 random_seed = 64
 shuffle_dataset = False
 validation_split = .8
-start = int(args.epoch)
 
 # *Hyperparameter/
 batch_size = 128
@@ -146,7 +145,7 @@ criterion = nn.CosineSimilarity()
 
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
-step = start
+step = 0
 
 if not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
