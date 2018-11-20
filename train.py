@@ -61,7 +61,7 @@ def save_iteration(iteration, local):
         drive = GoogleDrive(gauth)  
 
         # get the folder id where you want to save your file
-        folder_id = 'trained_model_%s_%s/' % (args.lang, args.model)
+        folder_id = 'trained_model_%s_%s' % (args.lang, args.model)
         file = drive.CreateFile({'parents':[{u'id': folder_id}]})
         file.SetContentFile('iteration.pkl')
         file.Upload()
