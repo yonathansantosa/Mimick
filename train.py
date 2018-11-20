@@ -44,13 +44,13 @@ def l2_dist(tensor1, tensor2):
     all_dist = torch.stack(all_dist)
     return all_dist
 
-def save_iteration(iteration):
-    iteration_file = 'iteration.pkl' if args.local else '/content/gdrive/My Drive/iteration.pkl'
+def save_iteration(iteration, local):
+    iteration_file = 'iteration.pkl' if local else '/content/gdrive/My Drive/iteration.pkl'
     with open(iteration_file, 'wb') as f:
         pickle.dump(iteration, f)
 
-def load_iteration():
-    iteration_file = 'iteration.pkl' if args.local else '/content/gdrive/My Drive/iteration.pkl'
+def load_iteration(local):
+    iteration_file = 'iteration.pkl' if local else '/content/gdrive/My Drive/iteration.pkl'
     with open(iteration_file, 'rb') as f:
         itx = pickle.load(f)
     return itx
@@ -151,7 +151,7 @@ else:
     if args.load:
         model.load_state_dict(torch.load('%s%s.pth' % (saved_model_path, args.model)))
         if os.path.exists('/content/gdrive/My Drive/iteration.pkl') and start == 0: 
-            step = load_iteration()
+            step = load_iteration(args.local)
 
 
 
@@ -182,7 +182,7 @@ for epoch in tqdm(range(max_epoch)):
         info = {
             'loss-Train-%s' % args.model : loss.item(),
         }
-        save_iteration(step)
+        save_iteration(step, args.local)
 
         step += 1
         for tag, value in info.items():
