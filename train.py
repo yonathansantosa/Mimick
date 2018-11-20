@@ -49,25 +49,10 @@ def save_iteration(iteration, local):
     with open(iteration_file, 'wb') as f:
         pickle.dump(iteration, f)
     if not local:
-        from pydrive.auth import GoogleAuth
-        from pydrive.drive import GoogleDrive
-        from google.colab import auth
-        from oauth2client.client import GoogleCredentials
-
-        # 1. Authenticate and create the PyDrive client.
-        auth.authenticate_user()
-        gauth = GoogleAuth()
-        gauth.credentials = GoogleCredentials.get_application_default()
-        drive = GoogleDrive(gauth)  
-
-        # get the folder id where you want to save your file
-        folder_id = 'trained_model_%s_%s' % (args.lang, args.model)
-        file = drive.CreateFile({'parents':[{u'id': folder_id}]})
-        file.SetContentFile('iteration.pkl')
-        file.Upload()
+        files.download(iteration_file)
 
 def load_iteration(local):
-    iteration_file = 'iteration.pkl' if local else '/content/gdrive/My Drive/iteration.pkl'
+    iteration_file = 'iteration.pkl'
     with open(iteration_file, 'rb') as f:
         itx = pickle.load(f)
     return itx
