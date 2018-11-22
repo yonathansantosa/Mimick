@@ -86,7 +86,8 @@ args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
-logger = Logger('./logs/%s_run%s/' % (args.model, args.run))
+logger_dir = './logs/%s_run%s/' % (args.model, args.run)
+logger = Logger(logger_dir)
 saved_model_path = 'trained_model_%s_%s/' % (args.lang, args.model) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s/' % (args.lang, args.model)
 
 # *Device configuration
@@ -190,6 +191,9 @@ for epoch in tqdm(range(max_epoch)):
         for tag, value in info.items():
             logger.scalar_summary(tag, value, step)
 
+        if not args.local:
+            shutil.copytree(logger_dir, '/content/gdrive/My Drive/trained_model_%s_%s/logs' % (args.lang, args.model))
+            
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
