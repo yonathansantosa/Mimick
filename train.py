@@ -16,6 +16,7 @@ from tqdm import tqdm
 import os
 from logger import Logger
 import shutil
+from distutils.dir_util import copy_tree
 import pickle
 
 def cosine_similarity(tensor1, tensor2):
@@ -192,7 +193,7 @@ for epoch in tqdm(range(max_epoch)):
             logger.scalar_summary(tag, value, step)
 
         if not args.local:
-            shutil.copytree(logger_dir, '/content/gdrive/My Drive/trained_model_%s_%s/logs' % (args.lang, args.model))
+            copy_tree(logger_dir, '/content/gdrive/My Drive/trained_model_%s_%s/logs' % (args.lang, args.model))
             
         loss.backward()
         optimizer.step()
