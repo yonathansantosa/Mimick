@@ -193,7 +193,7 @@ for epoch in tqdm(range(max_epoch)):
             logger.scalar_summary(tag, value, step)
 
         if not args.local:
-            copy_tree(logger_dir, '/content/gdrive/My Drive/trained_model_%s_%s/logs' % (args.lang, args.model))
+            copy_tree(logger_dir, '/content/gdrive/My Drive/trained_model_%s_%s/logs/%s_run%s/' % (args.lang, args.model, args.model, args.run))
             
         loss.backward()
         optimizer.step()
