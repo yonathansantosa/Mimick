@@ -87,7 +87,10 @@ args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
-logger_dir = '/content/gdrive/My Drive/trained_model_%s_%s/logs/%s_run%s/' % (args.lang, args.model, args.model, args.run)
+if not args.local:
+    logger_dir = '/content/gdrive/My Drive/trained_model_%s_%s/logs/run%s/' % (args.lang, args.model, args.run)
+else:
+    logger_dir = './logs/%s_run_%s/' % (args.model, args.run)
 logger = Logger(logger_dir)
 saved_model_path = 'trained_model_%s_%s/' % (args.lang, args.model) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s/' % (args.lang, args.model)
 
@@ -193,7 +196,7 @@ for epoch in tqdm(range(max_epoch)):
             logger.scalar_summary(tag, value, step)
 
         if not args.local:
-            copy_tree(logger_dir, '/content/gdrive/My Drive/trained_model_%s_%s/logs/%s_run%s/' % (args.lang, args.model, args.model, args.run))
+            copy_tree('/content/gdrive/My Drive/trained_model_%s_%s/logs/run%s/' % (args.lang, args.model, args.model, args.run), './logs/')
             
         loss.backward()
         optimizer.step()
