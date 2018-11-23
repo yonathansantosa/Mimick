@@ -144,9 +144,9 @@ else:
 
 model.to(device)
 
-# criterion = nn.MSELoss()
+criterion = nn.MSELoss()
 # criterion = nn.CrossEntropyLoss()
-criterion = nn.CosineSimilarity()
+# criterion = nn.CosineSimilarity()
 
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
@@ -180,7 +180,8 @@ for epoch in tqdm(range(max_epoch)):
         model.zero_grad()
 
         output = model.forward(inputs) # (batch x word_emb_dim)
-        loss = torch.mean(-criterion(output, target)) + 1
+        # loss = torch.mean(-criterion(output, target)) + 1
+        loss = criterion(output, target)
         # print(loss)
 
         # ##################
@@ -300,7 +301,7 @@ for epoch in tqdm(range(max_epoch)):
         model.zero_grad()
 
         output = model.forward(inputs) # (batch x word_emb_dim)
-        loss = criterion(output, target)
+        # loss = criterion(output, target)
 
         cos_dist = cosine_similarity(output, word_embedding)
         
