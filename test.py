@@ -88,14 +88,13 @@ args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
-if not args.local:
-    logger_dir = '/content/gdrive/My Drive/trained_model_%s_%s/logs/run%s/' % (args.lang, args.model, args.run)
-else:
-    logger_dir = './logs/%s_run_%s/' % (args.model, args.run)
-logger = Logger(logger_dir)
+cloud_dir = '/content/gdrive/My Drive/'
 saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
+logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
+
 if not args.local:
-    saved_model_path = '/content/gdrive/My Drive/' + saved_model_path
+    logger_dir = cloud_dir + logger_dir
+    saved_model_path = cloud_dir + saved_model_path
 
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -125,12 +124,7 @@ if shuffle_dataset:
 
 #* Creating PT data samplers and loaders:
 train_indices, val_indices = indices[:split], indices[split:]
-
-# train_sampler = SubsetRandomSampler(train_indices)
 valid_sampler = SubsetRandomSampler(val_indices)
-
-# train_loader = DataLoader(dataset, batch_size=batch_size, 
-#                                 sampler=train_sampler)
 validation_loader = DataLoader(dataset, batch_size=val_batch_size,
                                 sampler=valid_sampler)
 
@@ -174,7 +168,8 @@ for it, (X, y) in enumerate(validation_loader):
 
     for i, word in enumerate(X):
         loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
-        total_loss += [loss_dist[0, -1]]
+        print(loss_dist)
+        total_loss += [float(loss_dist[0, -1])]
         tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
         # *SANITY CHECK
         # dist_str = 'dist: '
@@ -182,4 +177,5 @@ for it, (X, y) in enumerate(validation_loader):
         #     dist_str += '%.4f ' % j
         # tqdm.write(dist_str)
 
+print(total_loss)
 print('total loss = ', np.mean(total_loss))

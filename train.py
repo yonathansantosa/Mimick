@@ -88,14 +88,15 @@ args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
-if not args.local:
-    logger_dir = '/content/gdrive/My Drive/trained_model_%s_%s/logs/run%s/' % (args.lang, args.model, args.run)
-else:
-    logger_dir = './logs/%s_run_%s/' % (args.model, args.run)
-logger = Logger(logger_dir)
+cloud_dir = '/content/gdrive/My Drive/'
 saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
+logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
+
 if not args.local:
-    saved_model_path = '/content/gdrive/My Drive/' + saved_model_path
+    logger_dir = cloud_dir + logger_dir
+    saved_model_path = cloud_dir + saved_model_path
+
+logger = Logger(logger_dir)
 
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -109,7 +110,7 @@ shuffle_dataset = False
 validation_split = .8
 
 # *Hyperparameter/
-batch_size = 128
+batch_size = 20
 val_batch_size = 3
 max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
@@ -199,7 +200,7 @@ for epoch in tqdm(range(max_epoch)):
             logger.scalar_summary(tag, value, step)
 
         if not args.local:
-            copy_tree('/content/gdrive/My Drive/trained_model_%s_%s/logs/run%s/' % (args.lang, args.model, args.run), './logs/')
+            copy_tree('/content/gdrive/My Drive/trained_model_%s_%s_%s/logs/run%s/' % (args.lang, args.model, args.loss_fn, args.run), './logs/')
             
         loss.backward()
         optimizer.step()
