@@ -82,7 +82,7 @@ parser.add_argument('--charlen', default=20,
                     help='maximum length')
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
-parser.add_argument('--loss_fn' default='mse')
+parser.add_argument('--loss_fn', default='mse')
 
 args = parser.parse_args()
 
