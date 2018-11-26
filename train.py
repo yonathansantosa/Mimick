@@ -92,7 +92,7 @@ if not args.local:
 else:
     logger_dir = './logs/%s_run_%s/' % (args.model, args.run)
 logger = Logger(logger_dir)
-saved_model_path = 'trained_model_%s_%s/' % (args.lang, args.model) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s/' % (args.lang, args.model)
+saved_model_path = 'trained_model_%s_%s' % (args.lang, args.model) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s' % (args.lang, args.model)
 
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -113,8 +113,8 @@ learning_rate = float(args.lr)
 momentum = 0.2
 
 char_embed = Char_embedding(char_emb_dim, max_len=char_max_len, random=True)
-if args.load:
-    char_embed.char_embedding.load_state_dict(torch.load('%scharembed.pth' % saved_model_path))
+if args.load and os.path.exists('%s/charembed.pth' % saved_model_path):
+    char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 
@@ -155,8 +155,8 @@ step = 0
 if not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
 else:
-    if args.load:
-        model.load_state_dict(torch.load('%s%s.pth' % (saved_model_path, args.model)))
+    if args.load and os.path.exists('%s/%s.pth' % (saved_model_path, args.model)):
+        model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
         # if os.path.exists('/content/gdrive/My Drive/iteration.pkl') and start == 0: 
         #     step = load_iteration(args.local)
 
@@ -326,5 +326,5 @@ for epoch in tqdm(range(max_epoch)):
     model.train()
 
 
-    torch.save(model.state_dict(), '%s%s.pth' % (saved_model_path, args.model))
-    torch.save(char_embed.char_embedding.state_dict(), '%scharembed.pth' % saved_model_path)
+    torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
+    torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
