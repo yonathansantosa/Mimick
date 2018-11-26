@@ -45,9 +45,10 @@ parser.add_argument('--lr', default=0.1,
                     help='learning rate')
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--loss_fn', default='mse')
+parser.add_argument('--local', default=False, action='store_true',)
 
 args = parser.parse_args()
-saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
+saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
 
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
