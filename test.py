@@ -93,7 +93,9 @@ if not args.local:
 else:
     logger_dir = './logs/%s_run_%s/' % (args.model, args.run)
 logger = Logger(logger_dir)
-saved_model_path = 'trained_model_%s_%s' % (args.lang, args.model) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s' % (args.lang, args.model)
+saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
+if not args.local:
+    saved_model_path = '/content/gdrive/My Drive/' + saved_model_path
 
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
