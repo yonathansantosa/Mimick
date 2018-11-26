@@ -49,7 +49,7 @@ class Char_embedding:
         for word in split_sentence:
             c = list(word)
             dropout_prob = 0.2
-            dropout_rand = np.random.uniform(size=self.max_len)
+            dropout_rand = np.random.rand(self.max_len)
             if len(c) > self.max_len:
                 # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.max_len]]
                 c_idx = [self.char2idx[x] if (x in self.char2idx and dropout_rand[i] > dropout_prob) else self.char2idx['<unk>'] for i, x in enumerate(c[:self.max_len])]

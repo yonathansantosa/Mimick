@@ -199,8 +199,9 @@ for epoch in tqdm(range(max_epoch)):
         # save_iteration(step, args.local)
 
         step += 1
-        for tag, value in info.items():
-            logger.scalar_summary(tag, value, step)
+        if args.run != 0:
+            for tag, value in info.items():
+                logger.scalar_summary(tag, value, step)
 
         if not args.local:
             copy_tree('/content/gdrive/My Drive/trained_model_%s_%s_%s/logs/run%s/' % (args.lang, args.model, args.loss_fn, args.run), './logs/')
