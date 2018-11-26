@@ -150,8 +150,6 @@ word_embedding = dataset.embedding_vectors.to(device)
 model.eval()
 total_loss = .0
 for it, (X, y) in enumerate(validation_loader):
-    if it >= 1: break
-    
     words = dataset.idxs2words(X)
     inputs = char_embed.char_split(words)
     # word_embedding = dataset.embedding_vectors.to(device)
