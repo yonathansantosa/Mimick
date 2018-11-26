@@ -185,6 +185,9 @@ for epoch in tqdm(range(max_epoch)):
         output = model.forward(inputs) # (batch x word_emb_dim)
         # loss = torch.mean(-criterion(output, target)) + 1
         loss = criterion(output, target)
+        if args.loss_fn == 'cosine':
+            loss *= -1
+            loss = torch.mean(loss) + 1
         # print(loss)
 
         # ##################
