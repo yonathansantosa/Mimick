@@ -108,7 +108,7 @@ random_seed = 64
 shuffle_dataset = False
 validation_split = .8
 
-val_batch_size = 3
+val_batch_size = 64
 
 char_embed = Char_embedding(char_emb_dim, max_len=char_max_len, random=True)
 char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
