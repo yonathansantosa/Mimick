@@ -109,8 +109,7 @@ validation_split = .8
 val_batch_size = 1
 
 char_embed = Char_embedding(char_emb_dim, max_len=char_max_len, random=True)
-if args.load and os.path.exists('%s/charembed.pth' % saved_model_path):
-    char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
+char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 
@@ -141,19 +140,8 @@ else:
 model.to(device)
 
 criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
-# criterion = nn.CrossEntropyLoss()
 
-# optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
-step = 0
-
-if not os.path.exists(saved_model_path):
-    os.makedirs(saved_model_path)
-else:
-    if args.load and os.path.exists('%s/%s.pth' % (saved_model_path, args.model)):
-        model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
-        # if os.path.exists('/content/gdrive/My Drive/iteration.pkl') and start == 0: 
-        #     step = load_iteration(args.local)
+model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 
 
 
