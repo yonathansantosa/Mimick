@@ -296,7 +296,7 @@ for epoch in tqdm(range(max_epoch)):
     ############################
 
     if not args.local:
-        copy_tree('/content/gdrive/My Drive/trained_model_%s_%s_%s/logs/run%s/' % (args.lang, args.model, args.loss_fn, args.run), logger_dir)
+        copy_treelogger_dir, '/content/gdrive/My Drive/trained_model_%s_%s_%s/logs/run%s/' % (args.lang, args.model, args.loss_fn, args.run))
         
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
     torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
