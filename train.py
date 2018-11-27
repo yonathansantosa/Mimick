@@ -194,7 +194,7 @@ for epoch in tqdm(range(max_epoch)):
         # Tensorboard
         # ################## 
         info = {
-            'loss-Train-%s' % args.model : loss.item(),
+            'loss-Train-%s-run%s' % (args.model, args.run) : loss.item(),
         }
         # save_iteration(step, args.local)
 
@@ -305,7 +305,7 @@ for epoch in tqdm(range(max_epoch)):
         if it >= 1: break
         
         words = dataset.idxs2words(X)
-        inputs = char_embed.char_split(words)
+        inputs = char_embed.char_split(words, dropout=False)
         # word_embedding = dataset.embedding_vectors.to(device)
         # target = torch.stack([dataset.embedding_vectors[idx] for idx in X]).squeeze()
         target = y

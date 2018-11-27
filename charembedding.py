@@ -31,7 +31,7 @@ class Char_embedding:
             self.char2idx[c] = int(i)
             self.idx2char[i] = c
 
-    def char_split(self, sentence):
+    def char_split(self, sentence, dropout=True):
         '''
         Splitting character of a sentences then converting it
         into list of index
@@ -60,7 +60,8 @@ class Char_embedding:
             char_data += [c_idx]
 
         char_data = torch.Tensor(char_data).long()
-        char_data = F.dropout(char_data, 0.2)
+        if dropout:
+            char_data = F.dropout(char_data, 0.2)
         return char_data
 
     def char2ix(self, c):
