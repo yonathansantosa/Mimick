@@ -202,9 +202,6 @@ for epoch in tqdm(range(max_epoch)):
         if args.run != 0:
             for tag, value in info.items():
                 logger.scalar_summary(tag, value, step)
-
-        if not args.local:
-            copy_tree('/content/gdrive/My Drive/trained_model_%s_%s_%s/logs/run%s/' % (args.lang, args.model, args.loss_fn, args.run), './logs/')
             
         loss.backward()
         optimizer.step()
@@ -293,6 +290,17 @@ for epoch in tqdm(range(max_epoch)):
     # model.train()
     model.eval()
     print()
+    
+    ############################
+    # SAVING TRAINED MODEL
+    ############################
+
+    if not args.local:
+        copy_tree('/content/gdrive/My Drive/trained_model_%s_%s_%s/logs/run%s/' % (args.lang, args.model, args.loss_fn, args.run), './logs/')
+        
+    torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
+    torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
+    
     for it, (X, y) in enumerate(validation_loader):
         if it >= 1: break
         
@@ -332,6 +340,4 @@ for epoch in tqdm(range(max_epoch)):
 
     model.train()
 
-
-    torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
-    torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
+    
