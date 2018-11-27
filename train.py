@@ -93,7 +93,7 @@ saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_
 logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
 
 if not args.local:
-    logger_dir = cloud_dir + logger_dir
+    # logger_dir = cloud_dir + logger_dir
     saved_model_path = cloud_dir + saved_model_path
 
 logger = Logger(logger_dir)
