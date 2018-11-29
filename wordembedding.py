@@ -62,7 +62,7 @@ class Word_embedding:
         idxs = (torch.LongTensor) 1D tensor contains indexes
         '''
         idxs = idxs.squeeze()
-        sentence = " ".join([self.itos[int(idx)] for idx in idxs])
+        sentence = [self.itos[int(idx)] for idx in idxs]
         return sentence
 
     def get_word_vectors(self):

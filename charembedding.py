@@ -44,9 +44,9 @@ class Char_embedding:
         char_data = []
         numbers = set(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
         # split_sentence = sentence.split()
-        split_sentence = sentence.split()
+        # split_sentence = sentence.split()
 
-        for word in split_sentence:
+        for word in sentence:
             c = list(word)
             if len(c) > self.max_len:
                 # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.max_len]]

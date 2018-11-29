@@ -167,10 +167,7 @@ for it, (X, target) in enumerate(validation_loader):
     nearest_neighbor = nearest_neighbor[:, :5]
     dist = dist[:, :5].data.cpu().numpy()
     
-    print(X.size())
-    print(inputs.size())
-    print(output.size())
-    print(target.size())
+    
 
     for i, word in enumerate(X):
         loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
@@ -182,6 +179,12 @@ for it, (X, target) in enumerate(validation_loader):
         # for j in dist[i]:
         #     dist_str += '%.4f ' % j
         # tqdm.write(dist_str)
+    
+    print(X.size())
+    print(words.size())
+    print(inputs.size())
+    print(output.size())
+    print(target.size())
 
 print(total_loss)
 # print('total loss = ', np.mean(total_loss))
