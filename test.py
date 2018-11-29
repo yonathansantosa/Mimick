@@ -18,7 +18,7 @@ from logger import Logger
 import shutil
 from distutils.dir_util import copy_tree
 import pickle
-from IPython.display import clear_output
+
 
 def cosine_similarity(tensor1, tensor2):
     # tensor2 += 1.e-15
@@ -96,7 +96,7 @@ logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
 if not args.local:
     logger_dir = cloud_dir + logger_dir
     saved_model_path = cloud_dir + saved_model_path
-
+    from IPython.display import clear_output
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -147,7 +147,7 @@ model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 word_embedding = dataset.embedding_vectors.to(device)
 model.eval()
 total_loss = 0.0
-for it, (X, target) in enumerate(validation_loader):
+for (X, target) in tqdm(validation_loader):
     if not args.local: clear_output()
     words = dataset.idxs2words(X)
     inputs = char_embed.char_split(words)
@@ -168,25 +168,17 @@ for it, (X, target) in enumerate(validation_loader):
 
     nearest_neighbor = nearest_neighbor[:, :5]
     dist = dist[:, :5].data.cpu().numpy()
-    
-    
 
     for i, word in enumerate(X):
         loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
         # print(loss_dist)
         total_loss += float(loss_dist[0, -1])/total_val_size
-        tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+        # tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
         # *SANITY CHECK
         # dist_str = 'dist: '
         # for j in dist[i]:
         #     dist_str += '%.4f ' % j
         # tqdm.write(dist_str)
-    
-    print(X.size())
-    print(len(words))
-    print(inputs.size())
-    print(output.size())
-    print(target.size())
 
 print(total_loss)
 # print('total loss = ', np.mean(total_loss))
