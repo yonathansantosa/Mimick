@@ -117,6 +117,7 @@ dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 dataset_size = len(dataset)
 indices = list(range(dataset_size))
 split = int(np.floor(validation_split * dataset_size))
+total_val_size = dataset_size - split
 
 if shuffle_dataset:
     np.random.seed(random_seed)
@@ -144,42 +145,42 @@ model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 # *Training
 word_embedding = dataset.embedding_vectors.to(device)
 model.eval()
-total_loss = []
+total_loss = 0.0
 for it, (X, y) in enumerate(validation_loader):
-    words = dataset.idxs2words(X)
-    inputs = char_embed.char_split(words)
-    # word_embedding = dataset.embedding_vectors.to(device)
-    # target = torch.stack([dataset.embedding_vectors[idx] for idx in X]).squeeze()
-    target = y
+    # words = dataset.idxs2words(X)
+    # inputs = char_embed.char_split(words)
+    # # word_embedding = dataset.embedding_vectors.to(device)
+    # # target = torch.stack([dataset.embedding_vectors[idx] for idx in X]).squeeze()
+    # target = y
 
-    inputs = inputs.to(device) # (length x batch x char_emb_dim)
-    target = target.to(device) # (batch x word_emb_dim)
+    # inputs = inputs.to(device) # (length x batch x char_emb_dim)
+    # target = target.to(device) # (batch x word_emb_dim)
 
-    model.zero_grad()
+    # model.zero_grad()
 
-    output = model.forward(inputs) # (batch x word_emb_dim)
+    # output = model.forward(inputs) # (batch x word_emb_dim)
 
-    cos_dist = cosine_similarity(output, word_embedding)
+    # cos_dist = cosine_similarity(output, word_embedding)
 
-    dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
+    # dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
 
-    nearest_neighbor = nearest_neighbor[:, :5]
-    dist = dist[:, :5].data.cpu().numpy()
+    # nearest_neighbor = nearest_neighbor[:, :5]
+    # dist = dist[:, :5].data.cpu().numpy()
     
-    print(inputs.size())
-    print(output.size())
-    print(target.size())
-    
-    for i, word in enumerate(X):
-        loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
-        # print(loss_dist)
-        total_loss += [float(loss_dist[0, -1])]
-        tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
-        # *SANITY CHECK
-        # dist_str = 'dist: '
-        # for j in dist[i]:
-        #     dist_str += '%.4f ' % j
-        # tqdm.write(dist_str)
+    print(X.size())
+    # print(output.size())
+    print(y.size())
+
+    # for i, word in enumerate(X):
+    #     loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
+    #     # print(loss_dist)
+    #     total_loss += float(loss_dist[0, -1])/total_val_size
+    #     tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+    #     # *SANITY CHECK
+    #     # dist_str = 'dist: '
+    #     # for j in dist[i]:
+    #     #     dist_str += '%.4f ' % j
+    #     # tqdm.write(dist_str)
 
 print(total_loss)
-print('total loss = ', np.mean(total_loss))
+# print('total loss = ', np.mean(total_loss))
