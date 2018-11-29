@@ -165,11 +165,12 @@ for it, (X, y) in enumerate(validation_loader):
 
     nearest_neighbor = nearest_neighbor[:, :5]
     dist = dist[:, :5].data.cpu().numpy()
-
+    
+    print(inputs.size())
+    print(output.size())
+    print(target.size())
+    
     for i, word in enumerate(X):
-        print(inputs.size())
-        print(output.size())
-        print(target.size())
         loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
         # print(loss_dist)
         total_loss += [float(loss_dist[0, -1])]
