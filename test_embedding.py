@@ -55,7 +55,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # *Parameters
 char_emb_dim = 300
-char_max_len = 50
+char_max_len = 20
 word_emb_dim = 64
 random_seed = 64
 shuffle_dataset = False
@@ -76,9 +76,8 @@ model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 model.eval()
 
 # *Evaluating
-words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'
+words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'.split()
 inputs = char_embed.char_split(words)
-inputs = torch.tensor(inputs).unsqueeze(1)
 embedding = dataset.embedding_vectors.to(device)
 inputs = inputs.to(device) # (length x batch x char_emb_dim)
 output = model.forward(inputs) # (batch x word_emb_dim)
@@ -87,5 +86,5 @@ cos_dist = cosine_similarity(output, embedding)
 dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
 nearest_neighbor = nearest_neighbor[:, :5]
 dist = dist[:, :5].data.cpu().numpy()
-for i, word in enumerate(words.split()):
+for i, word in enumerate(words):
     print('%.4f | ' % np.mean(dist[i]) + word + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
