@@ -167,8 +167,10 @@ for it, (X, y) in enumerate(validation_loader):
     dist = dist[:, :5].data.cpu().numpy()
 
     for i, word in enumerate(X):
+        print(output.size())
+        print(target.size())
         loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
-        print(loss_dist)
+        # print(loss_dist)
         total_loss += [float(loss_dist[0, -1])]
         tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
         # *SANITY CHECK
