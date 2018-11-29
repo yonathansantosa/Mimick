@@ -167,6 +167,7 @@ for it, (X, y) in enumerate(validation_loader):
     dist = dist[:, :5].data.cpu().numpy()
 
     for i, word in enumerate(X):
+        print(word.size())
         print(output.size())
         print(target.size())
         loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
