@@ -181,7 +181,7 @@ for it, (X, target) in enumerate(validation_loader):
         # tqdm.write(dist_str)
     
     print(X.size())
-    print(words.size())
+    print(len(words))
     print(inputs.size())
     print(output.size())
     print(target.size())
