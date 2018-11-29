@@ -83,6 +83,7 @@ parser.add_argument('--charlen', default=20,
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
 parser.add_argument('--loss_fn', default='mse')
+parser.add_argument('--dropout', default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -172,18 +173,13 @@ for epoch in tqdm(range(max_epoch)):
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words)
 
-        # embedding = torch.stack([dataset.embedding_vectors[idx] for idx in X]).squeeze()
-        # cos_dist = cosine_similarity(embedding.to(device), word_embedding)
-        # _, target = torch.sort(cos_dist, descending=True)
-        # target = target[:, 0].squeeze()
-
         inputs = Variable(inputs).to(device) # (length x batch x char_emb_dim)
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
 
         model.zero_grad()
 
         output = model.forward(inputs) # (batch x word_emb_dim)
-        # loss = torch.mean(-criterion(output, target)) + 1
+
         loss = criterion(output, target)
         if args.loss_fn == 'cosine':
             loss *= -1
@@ -207,24 +203,6 @@ for epoch in tqdm(range(max_epoch)):
         optimizer.step()
         optimizer.zero_grad()
 
-        # if it % int(dataset_size/(batch_size*5)) == 0:
-        #     for rep in range(5):
-        #         random_input = np.random.randint(len(X))
-        #         # inputs = dataset.embedding_vectors[X[random_input]].unsqueeze(0).to(device)
-        #         y = dataset.embedding_vectors[target[random_input]].unsqueeze(0).to(device)
-        #         # print(output.size())
-        #         model_output = torch.argmax(F.softmax(output[random_input], 0))
-        #         out = dataset.embedding_vectors[model_output].unsqueeze(0).to(device)
-
-        #         loss_dist = cosine_similarity(out, y)
-        #         dist, nearest_neighbor = torch.sort(loss_dist, descending=True)
-
-        #         nearest_neighbor = nearest_neighbor[:, 0]
-        #         dist = dist[:, 0].data.cpu().numpy()
-        #         tqdm.write('%.4f | ' % loss_dist[0] + dataset.idx2word(X[random_input]) + 
-        #             '\t=> ' + 
-        #             dataset.idx2word(model_output))
-        #     tqdm.write('')
         if it % int(dataset_size/(batch_size*5)) == 0:
             tqdm.write('loss = %.4f' % loss)
             model.eval()
@@ -249,45 +227,6 @@ for epoch in tqdm(range(max_epoch)):
             tqdm.write('%d %.4f | ' % (step, loss_dist[0]) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
             tqdm.write('')
-        # if it == 1: break
-
-    # *TESTING
-    # model.eval()
-    # for it, (X) in enumerate(validation_loader):
-    #     if it >= 1: break
-        
-    #     words = dataset.idxs2words(X)
-    #     inputs = char_embed.char_split(words)
-
-    #     inputs = inputs.to(device) # (length x batch x char_emb_dim)
-    #     target = X.squeeze().to(device) # (batch x word_emb_dim)
-
-    #     model.zero_grad()
-
-    #     output = model.forward(inputs) # (batch x word_emb_dim)
-    #     model_output = torch.argmax(F.softmax(output, 0), dim=1)
-    #     out = dataset.word_embedding(model_output.cpu()).to(device)
-
-
-    #     cos_dist = cosine_similarity(out, word_embedding)
-    #     dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
-
-    #     nearest_neighbor = nearest_neighbor[:, :5]
-    #     dist = dist[:, :5].data.cpu().numpy()
-    #     for i, word in enumerate(X):
-    #         y = dataset.embedding_vectors[target[i]].unsqueeze(0).to(device)
-    #         loss_dist = cosine_similarity(out[i].unsqueeze(0), y)
-    #         tqdm.write('%.4f | ' % loss_dist[0, -1] + 
-    #             dataset.idx2word(X[i, -1]) + 
-    #             '\t=> ' + 
-    #             dataset.idxs2sentence(nearest_neighbor[i]))
-    #         # *SANITY CHECK
-    #         # dist_str = 'dist: '
-    #         # for j in dist[i]:
-    #         #     dist_str += '%.4f ' % j
-    #         # tqdm.write(dist_str)
-    #     tqdm.write('==================')
-    # model.train()
     model.eval()
     print()
     
@@ -305,9 +244,7 @@ for epoch in tqdm(range(max_epoch)):
         if it >= 1: break
         
         words = dataset.idxs2words(X)
-        inputs = char_embed.char_split(words, dropout=False)
-        # word_embedding = dataset.embedding_vectors.to(device)
-        # target = torch.stack([dataset.embedding_vectors[idx] for idx in X]).squeeze()
+        inputs = char_embed.char_split(words, dropout=args.dropout)
         target = y
 
         inputs = inputs.to(device) # (length x batch x char_emb_dim)
@@ -339,5 +276,4 @@ for epoch in tqdm(range(max_epoch)):
             # tqdm.write(dist_str)
 
     model.train()
-
-    
+    if step >= 3000000: break    
