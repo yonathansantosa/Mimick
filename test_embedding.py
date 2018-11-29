@@ -55,7 +55,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # *Parameters
 char_emb_dim = 300
-char_max_len = 20
+char_max_len = 50
 word_emb_dim = 64
 random_seed = 64
 shuffle_dataset = False
@@ -78,6 +78,7 @@ model.eval()
 # *Evaluating
 words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'
 inputs = char_embed.char_split(words)
+inputs = torch.tensor(inputs).unsqueeze(1)
 embedding = dataset.embedding_vectors.to(device)
 inputs = inputs.to(device) # (length x batch x char_emb_dim)
 output = model.forward(inputs) # (batch x word_emb_dim)
