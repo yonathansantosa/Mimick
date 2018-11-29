@@ -147,8 +147,8 @@ word_embedding = dataset.embedding_vectors.to(device)
 model.eval()
 total_loss = 0.0
 for it, (X, y) in enumerate(validation_loader):
-    # words = dataset.idxs2words(X)
-    # inputs = char_embed.char_split(words)
+    words = dataset.idxs2words(X)
+    inputs = char_embed.char_split(words)
     # # word_embedding = dataset.embedding_vectors.to(device)
     # # target = torch.stack([dataset.embedding_vectors[idx] for idx in X]).squeeze()
     # target = y
@@ -168,6 +168,7 @@ for it, (X, y) in enumerate(validation_loader):
     # dist = dist[:, :5].data.cpu().numpy()
     
     print(X.size())
+    print(inputs.size())
     # print(output.size())
     print(y.size())
 
