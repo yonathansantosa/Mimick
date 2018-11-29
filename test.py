@@ -18,6 +18,7 @@ from logger import Logger
 import shutil
 from distutils.dir_util import copy_tree
 import pickle
+from IPython.display import clear_output
 
 def cosine_similarity(tensor1, tensor2):
     # tensor2 += 1.e-15
@@ -147,6 +148,7 @@ word_embedding = dataset.embedding_vectors.to(device)
 model.eval()
 total_loss = 0.0
 for it, (X, target) in enumerate(validation_loader):
+    if not args.local: clear_output()
     words = dataset.idxs2words(X)
     inputs = char_embed.char_split(words)
     # # word_embedding = dataset.embedding_vectors.to(device)
