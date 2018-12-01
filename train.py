@@ -157,8 +157,6 @@ criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 step = 0
 
-print(criterion)
-
 if not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
 else:
@@ -171,9 +169,7 @@ word_embedding = dataset.embedding_vectors.to(device)
 for epoch in tqdm(range(max_epoch)):
     for it, (X, y) in enumerate(train_loader):
         words = dataset.idxs2words(X)
-        print(words)
         inputs = char_embed.char_split(words)
-        print(inputs)
         inputs = Variable(inputs).to(device) # (length x batch x char_emb_dim)
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
 
