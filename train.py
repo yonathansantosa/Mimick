@@ -189,7 +189,7 @@ for epoch in tqdm(range(max_epoch)):
             model.eval()
             random_input = np.random.randint(len(X))
             
-            words = [dataset.idx2word(X[random_input])]
+            words = [dataset.idx2word(X[random_input])] # list of words
 
             inputs_test = char_embed.char_split(words)
 
