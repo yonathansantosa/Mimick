@@ -237,13 +237,12 @@ for epoch in tqdm(range(max_epoch)):
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
     torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
     
-    for it, (X, y) in enumerate(validation_loader):
+    for it, (X, target) in enumerate(validation_loader):
         if it >= 1: break
         
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words, dropout=args.dropout)
-        target = y
-
+       
         inputs = inputs.to(device) # (length x batch x char_emb_dim)
         target = target.to(device) # (batch x word_emb_dim)
 
