@@ -84,6 +84,7 @@ parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
 parser.add_argument('--loss_fn', default='mse')
 parser.add_argument('--dropout', default=False, action='store_true')
+parser.add_argument('--bsize', default=64)
 
 args = parser.parse_args()
 
@@ -111,7 +112,7 @@ shuffle_dataset = False
 validation_split = .8
 
 # *Hyperparameter/
-batch_size = 20
+batch_size = int(args.bsize)
 val_batch_size = 3
 max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
@@ -156,14 +157,13 @@ criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 step = 0
 
+print(criterion)
+
 if not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
 else:
     if args.load or int(args.run) > 1 and os.path.exists('%s/%s.pth' % (saved_model_path, args.model)):
         model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
-        # if os.path.exists('/content/gdrive/My Drive/iteration.pkl') and start == 0: 
-        #     step = load_iteration(args.local)
-
 
 
 # *Training
@@ -171,8 +171,9 @@ word_embedding = dataset.embedding_vectors.to(device)
 for epoch in tqdm(range(max_epoch)):
     for it, (X, y) in enumerate(train_loader):
         words = dataset.idxs2words(X)
+        print(words)
         inputs = char_embed.char_split(words)
-
+        print(inputs)
         inputs = Variable(inputs).to(device) # (length x batch x char_emb_dim)
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
 

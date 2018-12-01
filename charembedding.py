@@ -38,8 +38,7 @@ class Char_embedding:
 
         Parameter:
 
-
-        sentence = (str) input sentence
+        sentence = list of words
         '''
         char_data = []
         numbers = set(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
