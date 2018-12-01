@@ -45,20 +45,6 @@ def l2_dist(tensor1, tensor2):
     all_dist = torch.stack(all_dist)
     return all_dist
 
-# def save_iteration(iteration, local):
-#     iteration_file = 'iteration.pkl'
-#     with open(iteration_file, 'wb') as f:
-#         pickle.dump(iteration, f)
-#     if not local:
-#         from google.colab import files
-#         files.download(iteration_file)
-
-# def load_iteration(local):
-#     iteration_file = 'iteration.pkl'
-#     with open(iteration_file, 'rb') as f:
-#         itx = pickle.load(f)
-#     return itx
-
 # *Argument parser
 parser = argparse.ArgumentParser(
     description='Conditional Text Generation: Train Discriminator'
@@ -106,7 +92,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # *Parameters
 char_emb_dim = 300
 char_max_len = int(args.charlen)
-word_emb_dim = 64
 random_seed = 64
 shuffle_dataset = False
 validation_split = .8
@@ -153,16 +138,15 @@ model.to(device)
 criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 # criterion = nn.CrossEntropyLoss()
 
-# optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
-step = 0
-
 if not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
 else:
     if args.load or int(args.run) > 1 and os.path.exists('%s/%s.pth' % (saved_model_path, args.model)):
         model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
-
+        
+# optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+step = 0
 
 # *Training
 word_embedding = dataset.embedding_vectors.to(device)
@@ -177,10 +161,11 @@ for epoch in tqdm(range(max_epoch)):
 
         output = model.forward(inputs) # (batch x word_emb_dim)
 
-        loss = criterion(output, target)
-        if args.loss_fn == 'cosine':
-            loss *= -1
-            loss = torch.mean(loss) + 1
+        loss = torch.mean(-criterion(output, target)) +1
+
+        # if args.loss_fn == 'cosine':
+        #     loss *= -1
+        #     loss = torch.mean(loss) + 1
         # print(loss)
 
         # ##################
@@ -205,23 +190,22 @@ for epoch in tqdm(range(max_epoch)):
             model.eval()
             random_input = np.random.randint(len(X))
             
-            words = dataset.idx2word(X[random_input])
+            words = [dataset.idx2word(X[random_input])]
 
-            inputs = char_embed.char_split(words)
+            inputs_test = char_embed.char_split(words)
 
-            inputs = inputs.to(device) # (length x batch x char_emb_dim)
-            target = target.to(device) # (batch x word_emb_dim)
+            inputs_test = inputs_test.to(device) # (length x batch x char_emb_dim)
+            target_test = y.to(device) # (batch x word_emb_dim)
 
-            output = model.forward(inputs) # (batch x word_emb_dim)
-            cos_dist = cosine_similarity(output, word_embedding)
-            loss_dist = cosine_similarity(output, target[random_input].unsqueeze(0))
-
+            output_test = model.forward(inputs_test) # (batch x word_emb_dim)
+            cos_dist = cosine_similarity(output_test, word_embedding)
+            loss_dist = cosine_similarity(output_test, target_test[random_input].unsqueeze(0))
+            
             dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
-
             nearest_neighbor = nearest_neighbor[:, :5]
             dist = dist[:, :5].data.cpu().numpy()
-
-            tqdm.write('%d %.4f | ' % (step, loss_dist[0]) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
+            
+            tqdm.write('%d %.4f | ' % (step, loss_dist[0]) + words[0] + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
             tqdm.write('')
     model.eval()
