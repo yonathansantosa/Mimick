@@ -76,7 +76,7 @@ args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
-cloud_dir = '/content/gdrive/My Drive/train_without_dropout/'
+cloud_dir = '/content/gdrive/My Drive/train_dropout/'
 saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
 logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
 
@@ -84,6 +84,7 @@ if not args.local:
     # logger_dir = cloud_dir + logger_dir
     saved_model_path = cloud_dir + saved_model_path
 
+print(saved_model_path)
 logger = Logger(logger_dir)
 
 # *Device configuration
@@ -189,7 +190,7 @@ for epoch in tqdm(range(max_epoch)):
             model.eval()
             random_input = np.random.randint(len(X))
             
-            words = [dataset.idx2word(X[random_input])] # list of words
+            words = [dataset.idx2word(X[random_input])] # list of words  
 
             inputs_test = char_embed.char_split(words)
 
