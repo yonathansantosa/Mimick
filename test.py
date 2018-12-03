@@ -18,6 +18,7 @@ from logger import Logger
 import shutil
 from distutils.dir_util import copy_tree
 import pickle
+import sys
 
 
 def cosine_similarity(tensor1, tensor2):
@@ -89,14 +90,14 @@ args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
-cloud_dir = '/content/gdrive/My Drive/'
+cloud_dir = '/content/gdrive/My Drive/train_without_dropout/'
 saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
 logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
 
 if not args.local:
     logger_dir = cloud_dir + logger_dir
     saved_model_path = cloud_dir + saved_model_path
-    from IPython.display import clear_output
+
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -141,44 +142,47 @@ criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 
 model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 
-
+output_file_name = saved_model_path + 'test.txt'
 
 # *Training
 word_embedding = dataset.embedding_vectors.to(device)
 model.eval()
 total_loss = 0.0
-for (X, target) in tqdm(validation_loader):
-    if not args.local: clear_output()
-    words = dataset.idxs2words(X)
-    inputs = char_embed.char_split(words)
-    # # word_embedding = dataset.embedding_vectors.to(device)
-    # # target = torch.stack([dataset.embedding_vectors[idx] for idx in X]).squeeze()
-    # target = y
 
-    inputs = inputs.to(device) # (length x batch x char_emb_dim)
-    target = target.to(device) # (batch x word_emb_dim)
+with open(output_file_name, 'w') as f_out:
+    for (X, target) in tqdm(validation_loader):
+        if not args.local: clear_output()
+        words = dataset.idxs2words(X)
+        inputs = char_embed.char_split(words)
+        # # word_embedding = dataset.embedding_vectors.to(device)
+        # # target = torch.stack([dataset.embedding_vectors[idx] for idx in X]).squeeze()
+        # target = y
 
-    model.zero_grad()
+        inputs = inputs.to(device) # (length x batch x char_emb_dim)
+        target = target.to(device) # (batch x word_emb_dim)
 
-    output = model.forward(inputs) # (batch x word_emb_dim)
+        model.zero_grad()
 
-    cos_dist = cosine_similarity(output, word_embedding)
+        output = model.forward(inputs) # (batch x word_emb_dim)
 
-    dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
+        cos_dist = cosine_similarity(output, word_embedding)
 
-    nearest_neighbor = nearest_neighbor[:, :5]
-    dist = dist[:, :5].data.cpu().numpy()
+        dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
 
-    for i, word in enumerate(X):
-        loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
-        # print(loss_dist)
-        total_loss += float(loss_dist[0, -1])/total_val_size
-        # tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
-        # *SANITY CHECK
-        # dist_str = 'dist: '
-        # for j in dist[i]:
-        #     dist_str += '%.4f ' % j
-        # tqdm.write(dist_str)
+        nearest_neighbor = nearest_neighbor[:, :5]
+        dist = dist[:, :5].data.cpu().numpy()
 
-print(total_loss)
+        for i, word in enumerate(X):
+            loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
+            # print(loss_dist)
+            total_loss += float(loss_dist[0, -1])/total_val_size
+            f_out.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+            # tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+            # *SANITY CHECK
+            # dist_str = 'dist: '
+            # for j in dist[i]:
+            #     dist_str += '%.4f ' % j
+            # tqdm.write(dist_str)
+
+    print(total_loss)
 # print('total loss = ', np.mean(total_loss))
