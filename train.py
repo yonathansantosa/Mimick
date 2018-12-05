@@ -69,7 +69,7 @@ parser.add_argument('--charlen', default=20,
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
 parser.add_argument('--loss_fn', default='mse')
-parser.add_argument('--dropout', default=False, action='store_true')
+parser.add_argument('--dropout', default=0)
 parser.add_argument('--bsize', default=64)
 
 args = parser.parse_args()
@@ -161,11 +161,11 @@ for epoch in tqdm(range(max_epoch)):
         model.zero_grad()
 
         output = model.forward(inputs) # (batch x word_emb_dim)
-
+    
         loss = criterion(output, target)
         if args.loss_fn == 'cosine':
-            loss *= -1
-            loss = torch.mean(loss) + 1
+            loss = 1 - loss
+            loss = torch.mean(loss)
         # print(loss)
 
         # ##################
