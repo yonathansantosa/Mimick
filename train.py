@@ -225,7 +225,7 @@ for epoch in tqdm(range(max_epoch)):
         if it >= 1: break
         
         words = dataset.idxs2words(X)
-        inputs = char_embed.char_split(words, dropout=args.dropout)
+        inputs = char_embed.char_split(words, dropout=float(args.dropout))
        
         inputs = inputs.to(device) # (length x batch x char_emb_dim)
         target = target.to(device) # (batch x word_emb_dim)
