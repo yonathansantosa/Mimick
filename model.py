@@ -24,19 +24,24 @@ class mimick(nn.Module):
         return out
 
 class mimick_cnn(nn.Module):
-    def __init__(self, char_emb_dim, char_emb, emb_dim, n_vocab):
+    def __init__(self, char_emb_dim, char_emb, emb_dim, n_vocab, num_feature=100):
         super(mimick_cnn, self).__init__()
         self.embed = char_emb
-        self.conv2 = nn.Conv2d(1, 100, (2, char_emb_dim))
-        self.conv3 = nn.Conv2d(1, 100, (3, char_emb_dim))
-        self.conv4 = nn.Conv2d(1, 100, (4, char_emb_dim))
-        self.conv5 = nn.Conv2d(1, 100, (5, char_emb_dim))
-        self.conv6 = nn.Conv2d(1, 100, (6, char_emb_dim))
+        self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
+        self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim))
+        self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim))
+        self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim))
+        self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim))
 
         self.mlp = nn.Sequential(
-            nn.Linear(500, 300),
-            nn.Tanh(),
-            nn.Linear(300, emb_dim)
+            nn.Linear(5*num_feature, 450),
+            nn.Hardtanh(),
+            nn.Linear(450, 400),
+            nn.Hardtanh(),
+            nn.Linear(400, emb_dim),
+            nn.Hardtanh(),
+            # nn.Linear(400, 300),
+            # nn.Hardtanh()
         )
 
     def forward(self, inputs):
