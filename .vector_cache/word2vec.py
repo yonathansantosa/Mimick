@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--max', default=3000000)
 parser.add_argument('--embdim', default=300)
 parser.add_argument('--local', default=False, action='store_true')
+parser.add_argument('--negative', default=False, action='store_true')
 args = parser.parse_args()
 
 if args.local:
@@ -70,7 +71,9 @@ with gzip.open(FILE_NAME, 'rb') as f, open(output_file_name, 'w', encoding='utf-
         txt_vector = txt_vector[:emb_dim]
         # print(txt_vector)
         
-        if re.findall('_', word) == []:
+        if args.negative:
+            f_out.write("%s %s\n" % (word, " ".join(txt_vector)))
+        elif re.findall('_', word) == []:
             f_out.write("%s %s\n" % (word, " ".join(txt_vector)))
         
         sys.stdout.write("%d%%\r" % ((j + 1) / num_vectors * 100))
