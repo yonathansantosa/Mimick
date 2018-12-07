@@ -34,14 +34,14 @@ class mimick_cnn(nn.Module):
         self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim))
 
         self.mlp = nn.Sequential(
-            nn.Linear(5*num_feature, 5*num_feature),
+            nn.Linear(5*num_feature, 450),
             nn.Hardtanh(),
-            nn.Linear(5*num_feature, 5*num_feature),
+            nn.Linear(450, 400),
             nn.Hardtanh(),
-            nn.Linear(5*num_feature, 4*num_feature),
+            nn.Linear(400, emb_dim),
             nn.Hardtanh(),
-            nn.Linear(4*num_feature, emb_dim),
-            nn.Hardtanh()
+            # nn.Linear(400, 300),
+            # nn.Hardtanh()
         )
 
     def forward(self, inputs):
