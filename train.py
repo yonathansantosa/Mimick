@@ -101,7 +101,7 @@ validation_split = .8
 
 # *Hyperparameter/
 batch_size = int(args.bsize)
-val_batch_size = 3
+val_batch_size = 64
 max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
 momentum = 0.2
@@ -246,21 +246,24 @@ for epoch in tqdm(range(max_epoch)):
 
         nearest_neighbor = nearest_neighbor[:, :5]
         dist = dist[:, :5].data.cpu().numpy()
-
-        for i, word in enumerate(X):
-            loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
-            tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
-            total_val_loss += loss_dist[0, -1]
-            # *SANITY CHECK
-            # dist_str = 'dist: '
-            # for j in dist[i]:
-            #     dist_str += '%.4f ' % j
-            # tqdm.write(dist_str)
+        loss_val = F.mse_loss(output, target)
+        total_val_loss += loss_val.item()
+        if it < 1:
+            for i, word in enumerate(X):
+                if i >= 3: break
+                loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
+                tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+                # total_val_loss += loss_dist[0, -1]
+                # *SANITY CHECK
+                # dist_str = 'dist: '
+                # for j in dist[i]:
+                #     dist_str += '%.4f ' % j
+                # tqdm.write(dist_str)
     info = {
-        'loss-val-%s-run%s' % (args.model, args.run) : total_val_loss,
+        'loss-val-%s-run%s' % (args.model, args.run) : total_val_loss/len(X),
     }
 
     if args.run != 0:
         for tag, value in info.items():
-            logger.scalar_summary(tag, value, epoch)
+            logger_val.scalar_summary(tag, value, epoch)
     model.train()
