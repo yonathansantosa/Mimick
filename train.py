@@ -270,3 +270,5 @@ for epoch in tqdm(range(max_epoch)):
         for tag, value in info.items():
             logger_val.scalar_summary(tag, value, epoch)
     model.train()
+    if not args.local:
+        copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
