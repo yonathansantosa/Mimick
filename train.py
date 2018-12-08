@@ -192,22 +192,22 @@ for epoch in tqdm(range(max_epoch)):
             model.eval()
             random_input = np.random.randint(len(X))
             
-            words = [dataset.idx2word(X[random_input])] # list of words  
+            words = dataset.idx2word(X[random_input]) # list of words  
 
-            inputs_test = char_embed.char_split(words)
+            # inputs_test = char_embed.char_split(words)
 
-            inputs_test = inputs_test.to(device) # (length x batch x char_emb_dim)
-            target_test = y.to(device) # (batch x word_emb_dim)
+            # inputs_test = inputs_test.to(device) # (length x batch x char_emb_dim)
+            # target_test = y.to(device) # (batch x word_emb_dim)
 
-            output_test = model.forward(inputs_test) # (batch x word_emb_dim)
-            cos_dist = cosine_similarity(output_test, word_embedding)
-            loss_dist = cosine_similarity(output_test, target_test[random_input].unsqueeze(0))
+            # output_test = model.forward(inputs_test) # (batch x word_emb_dim)
+            cos_dist = cosine_similarity(output[random_input].unsqueeze(0), word_embedding)
+            loss_dist = cos_dist[0, random_input].unsqueeze(0)
             
             dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
             nearest_neighbor = nearest_neighbor[:, :5]
             dist = dist[:, :5].data.cpu().numpy()
             
-            tqdm.write('%d %.4f | ' % (step, loss_dist[0]) + words[0] + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
+            tqdm.write('%d %.4f | ' % (step, loss_dist[0]) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
             tqdm.write('')
     model.eval()
@@ -246,11 +246,14 @@ for epoch in tqdm(range(max_epoch)):
 
         nearest_neighbor = nearest_neighbor[:, :5]
         dist = dist[:, :5].data.cpu().numpy()
-        loss_val = F.mse_loss(output, target)
+        loss_val = F.cosine_similarity(output, target)
+        loss_val = 1 - loss_val
+        loss_val = torch.sum(loss_val/(dataset_size-split))
         total_val_loss += loss_val.item()
         if it < 1:
             for i, word in enumerate(X):
                 if i >= 3: break
+                # print(len(X))
                 loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
                 tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
                 # total_val_loss += loss_dist[0, -1]
@@ -260,7 +263,7 @@ for epoch in tqdm(range(max_epoch)):
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
     info = {
-        'loss-val-%s-run%s' % (args.model, args.run) : total_val_loss/len(X),
+        'loss-val-%s-run%s' % (args.model, args.run) : total_val_loss,
     }
 
     if args.run != 0:
