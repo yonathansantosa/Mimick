@@ -201,7 +201,7 @@ for epoch in tqdm(range(max_epoch)):
 
             # output_test = model.forward(inputs_test) # (batch x word_emb_dim)
             cos_dist = cosine_similarity(output[random_input].unsqueeze(0), word_embedding)
-            loss_dist = cos_dist[0, random_input].unsqueeze(0)
+            loss_dist = cos_dist[0, X[random_input]].unsqueeze(0)
             
             dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
             nearest_neighbor = nearest_neighbor[:, :5]
@@ -270,6 +270,6 @@ for epoch in tqdm(range(max_epoch)):
         for tag, value in info.items():
             logger_val.scalar_summary(tag, value, epoch)
     model.train()
-    
+
     if not args.local:
         copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
