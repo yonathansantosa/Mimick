@@ -236,21 +236,21 @@ for epoch in tqdm(range(max_epoch)):
         output = model.forward(inputs) # (batch x word_emb_dim)
         # loss = criterion(output, target)
 
-        cos_dist = cosine_similarity(output, word_embedding)
-        
-        # cos_dist = l2_dist(output, word_embedding)
-
-        dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
-
-        # nearest_neighbor = np.argsort(cos_dist, 1)
-
-        nearest_neighbor = nearest_neighbor[:, :5]
-        dist = dist[:, :5].data.cpu().numpy()
         loss_val = F.cosine_similarity(output, target)
         loss_val = 1 - loss_val
         loss_val = torch.sum(loss_val/(dataset_size-split))
         total_val_loss += loss_val.item()
         if it < 1:
+            cos_dist = cosine_similarity(output, word_embedding)
+    
+            # cos_dist = l2_dist(output, word_embedding)
+
+            dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
+
+            # nearest_neighbor = np.argsort(cos_dist, 1)
+
+            nearest_neighbor = nearest_neighbor[:, :5]
+            dist = dist[:, :5].data.cpu().numpy()
             for i, word in enumerate(X):
                 if i >= 3: break
                 # print(len(X))
