@@ -79,6 +79,7 @@ args = parser.parse_args()
 cloud_dir = '/content/gdrive/My Drive/train_dropout/'
 saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
 logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
+logger_val_dir = '%s/logs/val-run%s/' % (saved_model_path, args.run)
 
 if not args.local:
     # logger_dir = cloud_dir + logger_dir
@@ -86,6 +87,7 @@ if not args.local:
 
 print(saved_model_path)
 logger = Logger(logger_dir)
+logger_val = Logger(logger_val_dir)
 
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -221,9 +223,8 @@ for epoch in tqdm(range(max_epoch)):
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
     torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
     
+    total_val_loss = 0.
     for it, (X, target) in enumerate(validation_loader):
-        if it >= 1: break
-        
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words, dropout=float(args.dropout))
        
@@ -249,11 +250,17 @@ for epoch in tqdm(range(max_epoch)):
         for i, word in enumerate(X):
             loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
             tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+            total_val_loss += loss_dist[0, -1]
             # *SANITY CHECK
             # dist_str = 'dist: '
             # for j in dist[i]:
             #     dist_str += '%.4f ' % j
             # tqdm.write(dist_str)
+    info = {
+        'loss-val-%s-run%s' % (args.model, args.run) : total_val_loss,
+    }
 
+    if args.run != 0:
+        for tag, value in info.items():
+            logger.scalar_summary(tag, value, epoch)
     model.train()
-    if step >= 3000000: break    
