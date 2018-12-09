@@ -246,7 +246,6 @@ for epoch in tqdm(range(max_epoch)):
         
         # loss_val = F.mse_loss(output, target, size_average=False)
         # loss_val /= (dataset_size-split)
-        print(loss_val.item())
         total_val_loss += loss_val.item()
         if it < 1:
             cos_dist = cosine_similarity(output, word_embedding)
@@ -265,6 +264,7 @@ for epoch in tqdm(range(max_epoch)):
                 # for j in dist[i]:
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
+    print(total_val_loss)
     info_val = {
         'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss,
     }
