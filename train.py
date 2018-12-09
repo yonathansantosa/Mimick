@@ -138,8 +138,10 @@ else:
 
 model.to(device)
 
-criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
-# criterion = nn.CrossEntropyLoss()
+# criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
+
+criterion1 = nn.CrossEntropyLoss()
+criterion2 = nn.MSELoss()
 
 if not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
@@ -164,10 +166,13 @@ for epoch in tqdm(range(max_epoch)):
 
         output = model.forward(inputs) # (batch x word_emb_dim)
     
-        loss = criterion(output, target)
+        loss1 = criterion1(output, target)
         if args.loss_fn == 'cosine':
             loss = 1 - loss
             loss = torch.mean(loss)
+
+        loss2 = criterion2(output, target)
+        loss = loss1 + 0.5 * loss2
         # print(loss)
 
         # ##################
@@ -255,6 +260,7 @@ for epoch in tqdm(range(max_epoch)):
                 if i >= 3: break
                 # print(len(X))
                 loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
+                print(loss_dist)
                 tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
                 # total_val_loss += loss_dist[0, -1]
                 # *SANITY CHECK
@@ -263,12 +269,12 @@ for epoch in tqdm(range(max_epoch)):
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
     info = {
-        'loss-val-%s-run%s' % (args.model, args.run) : total_val_loss,
+        'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss,
     }
 
     if args.run != 0:
         for tag, value in info.items():
-            logger_val.scalar_summary(tag, value, epoch)
+            logger_val.scalar_summary(tag, value, step)
     model.train()
 
     if not args.local:
