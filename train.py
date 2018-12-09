@@ -228,6 +228,7 @@ for epoch in tqdm(range(max_epoch)):
     torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
     
     total_val_loss = 0.
+    
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words, dropout=float(args.dropout))
@@ -242,7 +243,7 @@ for epoch in tqdm(range(max_epoch)):
         loss_val = F.cosine_similarity(output, target)
         # loss_val = F.mse_loss(output, target, size_average=False)
         loss_val = 1 - loss_val
-        loss_val = loss_val/(dataset_size-split)
+        loss_val = torch.sum(loss_val/(dataset_size-split))
         total_val_loss += loss_val.item()
         if it < 1:
             cos_dist = cosine_similarity(output, word_embedding)
@@ -259,7 +260,7 @@ for epoch in tqdm(range(max_epoch)):
                 if i >= 3: break
                 # print(len(X))
                 loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
-                print(loss_dist)
+                
                 tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
                 # total_val_loss += loss_dist[0, -1]
                 # *SANITY CHECK
