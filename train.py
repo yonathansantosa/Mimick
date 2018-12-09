@@ -140,7 +140,7 @@ model.to(device)
 
 # criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 
-criterion1 = nn.CrossEntropyLoss()
+criterion1 = nn.CosineSimilarity()
 criterion2 = nn.MSELoss()
 
 if not os.path.exists(saved_model_path):
@@ -240,10 +240,10 @@ for epoch in tqdm(range(max_epoch)):
 
         output = model.forward(inputs) # (batch x word_emb_dim)
         # loss = criterion(output, target)
-
         loss_val = F.cosine_similarity(output, target)
+        # loss_val = F.mse_loss(output, target, size_average=False)
         loss_val = 1 - loss_val
-        loss_val = torch.sum(loss_val/(dataset_size-split))
+        loss_val = loss_val/(dataset_size-split)
         total_val_loss += loss_val.item()
         if it < 1:
             cos_dist = cosine_similarity(output, word_embedding)
