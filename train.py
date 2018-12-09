@@ -155,7 +155,7 @@ step = 0
 
 # *Training
 word_embedding = dataset.embedding_vectors.to(device)
-for epoch in tqdm(range(max_epoch)):
+for epoch in range(max_epoch):
     for it, (X, y) in enumerate(train_loader):
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words)
@@ -229,7 +229,7 @@ for epoch in tqdm(range(max_epoch)):
     
     total_val_loss = 0.
     
-    for it, (X, target) in tqdm(enumerate(validation_loader)):
+    for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words, dropout=float(args.dropout))
        
