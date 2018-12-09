@@ -167,9 +167,8 @@ for epoch in tqdm(range(max_epoch)):
         output = model.forward(inputs) # (batch x word_emb_dim)
     
         loss1 = criterion1(output, target)
-        if args.loss_fn == 'cosine':
-            loss = 1 - loss
-            loss = torch.mean(loss)
+        loss1 = 1 - loss1
+        loss1 = torch.mean(loss1)
 
         loss2 = criterion2(output, target)
         loss = loss1 + 0.5 * loss2
