@@ -229,7 +229,7 @@ for epoch in tqdm(range(max_epoch)):
     
     total_val_loss = 0.
     
-    for it, (X, target) in tqdm(enumerate(validation_loader)):
+    for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words, dropout=float(args.dropout))
        
@@ -264,7 +264,7 @@ for epoch in tqdm(range(max_epoch)):
                 # for j in dist[i]:
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
-    print(total_val_loss)
+    print('total validation loss =', total_val_loss)
     info_val = {
         'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss,
     }
