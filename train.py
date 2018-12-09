@@ -246,31 +246,31 @@ for epoch in tqdm(range(max_epoch)):
         
         # loss_val = F.mse_loss(output, target, size_average=False)
         # loss_val /= (dataset_size-split)
-        print(loss_val.item())
+        # print(loss_val.item())
         total_val_loss += loss_val.item()
-        if it < 1:
-            cos_dist = cosine_similarity(output, word_embedding)
+        # if it < 1:
+        #     cos_dist = cosine_similarity(output, word_embedding)
     
-            # cos_dist = l2_dist(output, word_embedding)
+        #     # cos_dist = l2_dist(output, word_embedding)
 
-            dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
+        #     dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
 
-            # nearest_neighbor = np.argsort(cos_dist, 1)
+        #     # nearest_neighbor = np.argsort(cos_dist, 1)
 
-            nearest_neighbor = nearest_neighbor[:, :5]
-            dist = dist[:, :5].data.cpu().numpy()
-            for i, word in enumerate(X):
-                if i >= 3: break
-                # print(len(X))
-                loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
+        #     nearest_neighbor = nearest_neighbor[:, :5]
+        #     dist = dist[:, :5].data.cpu().numpy()
+        #     for i, word in enumerate(X):
+        #         if i >= 3: break
+        #         # print(len(X))
+        #         loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
                 
-                tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
-                # total_val_loss += loss_dist[0, -1]
-                # *SANITY CHECK
-                # dist_str = 'dist: '
-                # for j in dist[i]:
-                #     dist_str += '%.4f ' % j
-                # tqdm.write(dist_str)
+        #         tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+        #         # total_val_loss += loss_dist[0, -1]
+        #         # *SANITY CHECK
+        #         # dist_str = 'dist: '
+        #         # for j in dist[i]:
+        #         #     dist_str += '%.4f ' % j
+        #         # tqdm.write(dist_str)
     info = {
         'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss,
     }
