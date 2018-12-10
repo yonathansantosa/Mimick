@@ -31,19 +31,25 @@ def cosine_similarity(tensor1, tensor2):
 
     # result = (tensor1_dot_tensor2/divisor).data.cpu().numpy()
     result = (tensor1_dot_tensor2/divisor.clamp(min=1.e-09)).data.cpu()
-
-    return result
+    d, n = torch.sort(result, descending=False)
+    neighbor = neighbor[:, :5]
+    dist = dist[:, :5]
+    return dist, neighbor
 
 def l2_dist(tensor1, tensor2):
-    all_dist = []
-    for t1 in tensor1:
-        dist = []
-        for t2 in tensor2:
-            dist += [torch.dist(t1, t2, 2)]
-        dist = torch.stack(dist)
-        all_dist += [dist]
-    all_dist = torch.stack(all_dist)
-    return all_dist
+    dist = torch.FloatTensor(0)
+    neighbor = torch.LongTensor(0)
+    for i, t1 in enumerate(tensor1):
+        # subtract = torch.abs(torch.add(tensor2, -1, t1))
+        # squared = torch.pow(subtract, 2)
+        # result = torch.norm(torch.pow(torch.add(tensor2, -1, t1), 2), 2, 1).unsqueeze(0)
+        d, n = torch.sort(torch.norm(torch.add(tensor2, -1, t1), 2, 1).unsqueeze(0), descending=False)
+        n = n[:, :5]
+        d = d[:, :5]
+        dist = torch.cat((dist, d))
+        neighbor = torch.cat((neighbor, n))
+
+    return dist, neighbor
 
 # *Argument parser
 parser = argparse.ArgumentParser(
@@ -154,7 +160,14 @@ optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 step = 0
 
 # *Training
+if args.loss_fn == 'cosine':
+    alpha = 1
+    beta = 0.5
+else:
+    alpha = 0.5
+    beta = 1        
 word_embedding = dataset.embedding_vectors.to(device)
+
 for epoch in tqdm(range(max_epoch)):
     for it, (X, y) in enumerate(train_loader):
         words = dataset.idxs2words(X)
@@ -166,12 +179,9 @@ for epoch in tqdm(range(max_epoch)):
 
         output = model.forward(inputs) # (batch x word_emb_dim)
     
-        loss1 = criterion1(output, target)
-        loss1 = 1 - loss1
-        loss1 = torch.mean(loss1)
-
+        loss1 = torch.mean(1 - criterion1(output, target))
         loss2 = criterion2(output, target)
-        loss = 0.5*loss1 + loss2
+        loss = alpha*loss1 + beta*loss2
         # print(loss)
 
         # ##################
@@ -204,19 +214,16 @@ for epoch in tqdm(range(max_epoch)):
             # target_test = y.to(device) # (batch x word_emb_dim)
 
             # output_test = model.forward(inputs_test) # (batch x word_emb_dim)
-            cos_dist = cosine_similarity(output[random_input].unsqueeze(0), word_embedding)
-            loss_dist = cos_dist[0, X[random_input]].unsqueeze(0)
-            
-            dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
-            nearest_neighbor = nearest_neighbor[:, :5]
-            dist = dist[:, :5].data.cpu().numpy()
-            
-            tqdm.write('%d %.4f | ' % (step, loss_dist[0]) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
+            distance, nearest_neighbor = l2_dist(output[random_input].unsqueeze(0).cpu(), word_embedding.cpu())
+            loss_dist = torch.dist(output[random_input], target[random_input])
+                        
+            tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
             tqdm.write('')
+    
+    torch.cuda.empty_cache()
     model.eval()
     print()
-    
     ############################
     # SAVING TRAINED MODEL
     ############################
@@ -248,17 +255,14 @@ for epoch in tqdm(range(max_epoch)):
         loss_val /= (dataset_size-split)
         total_val_loss += loss_val.item()
         if it < 1:
-            cos_dist = cosine_similarity(output, word_embedding)
+            distance, nearest_neighbor = l2_dist(output.cpu(), word_embedding.cpu())
 
-            dist, nearest_neighbor = torch.sort(cos_dist, descending=True)
-
-            nearest_neighbor = nearest_neighbor[:, :5]
-            dist = dist[:, :5].data.cpu().numpy()
+            # dist, nearest_neighbor = torch.sort(distance, descending=False)
             for i, word in enumerate(X):
                 if i >= 3: break
-                loss_dist = cosine_similarity(output[i].unsqueeze(0), target[i].unsqueeze(0))
+                loss_dist = torch.dist(output[i], target[i])
                 
-                tqdm.write('%.4f | ' % loss_dist[0, -1] + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+                tqdm.write('%.4f | ' % loss_dist.item() + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
                 # *SANITY CHECK
                 # dist_str = 'dist: '
                 # for j in dist[i]:
