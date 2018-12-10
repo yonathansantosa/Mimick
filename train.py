@@ -36,20 +36,40 @@ def cosine_similarity(tensor1, tensor2):
     dist = dist[:, :5]
     return dist, neighbor
 
-def l2_dist(tensor1, tensor2):
-    dist = torch.FloatTensor(0)
-    neighbor = torch.LongTensor(0)
-    for i, t1 in enumerate(tensor1):
-        # subtract = torch.abs(torch.add(tensor2, -1, t1))
-        # squared = torch.pow(subtract, 2)
-        # result = torch.norm(torch.pow(torch.add(tensor2, -1, t1), 2), 2, 1).unsqueeze(0)
-        d, n = torch.sort(torch.sum(torch.abs(torch.add(tensor2, -1, t1)).unsqueeze(0), 1), descending=False)
-        n = n[:, :5]
-        d = d[:, :5]
-        dist = torch.cat((dist, d))
-        neighbor = torch.cat((neighbor, n))
+# def l2_dist(tensor1, tensor2):
+#     dist = torch.FloatTensor(0)
+#     neighbor = torch.LongTensor(0)
+#     for i, t1 in enumerate(tensor1):
+#         # subtract = torch.abs(torch.add(tensor2, -1, t1))
+#         # squared = torch.pow(subtract, 2)
+#         # result = torch.norm(torch.pow(torch.add(tensor2, -1, t1), 2), 2, 1).unsqueeze(0)
+#         d, n = torch.sort(torch.sum(torch.abs(torch.add(tensor2, -1, t1)).unsqueeze(0), 1), descending=False)
+#         n = n[:, :5]
+#         d = d[:, :5]
+#         dist = torch.cat((dist, d))
+#         neighbor = torch.cat((neighbor, n))
 
-    return dist, neighbor
+#     return dist, neighbor
+def pairwise_distances(x, y=None):
+    '''
+    Input: x is a Nxd matrix
+           y is an optional Mxd matirx
+    Output: dist is a NxM matrix where dist[i,j] is the square norm between x[i,:] and y[j,:]
+            if y is not given then use 'y=x'.
+    i.e. dist[i,j] = ||x[i,:]-y[j,:]||^2
+    '''
+    x_norm = (x**2).sum(1).view(-1, 1)
+    if y is not None:
+        y_norm = (y**2).sum(1).view(1, -1)
+    else:
+        y = x
+        y_norm = x_norm.view(1, -1)
+
+    dist = x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))
+    d, n = torch.sort(dist, descending=False)
+    n = n[:, :5]
+    d = d[:, :5]
+    return d, n
 
 # *Argument parser
 parser = argparse.ArgumentParser(
@@ -214,7 +234,8 @@ for epoch in range(max_epoch):
             # target_test = y.to(device) # (batch x word_emb_dim)
 
             # output_test = model.forward(inputs_test) # (batch x word_emb_dim)
-            distance, nearest_neighbor = l2_dist(output[random_input].unsqueeze(0).cpu(), word_embedding.cpu())
+            # distance, nearest_neighbor = l2_dist(output[random_input].unsqueeze(0).cpu(), word_embedding.cpu())
+            distance, nearest_neighbor = pairwise_distances(output[random_input].unsqueeze(0), word_embedding)
             loss_dist = torch.dist(output[random_input], target[random_input])
                         
             tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
@@ -255,7 +276,8 @@ for epoch in range(max_epoch):
         loss_val /= (dataset_size-split)
         total_val_loss += loss_val.item()
         if it < 1:
-            distance, nearest_neighbor = l2_dist(output.cpu(), word_embedding.cpu())
+            # distance, nearest_neighbor = l2_dist(output.cpu(), word_embedding.cpu())
+            distance, nearest_neighbor = pairwise_distances(output, word_embedding)
 
             # dist, nearest_neighbor = torch.sort(distance, descending=False)
             for i, word in enumerate(X):
