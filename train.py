@@ -43,7 +43,7 @@ def l2_dist(tensor1, tensor2):
         # subtract = torch.abs(torch.add(tensor2, -1, t1))
         # squared = torch.pow(subtract, 2)
         # result = torch.norm(torch.pow(torch.add(tensor2, -1, t1), 2), 2, 1).unsqueeze(0)
-        d, n = torch.sort(torch.norm(torch.add(tensor2, -1, t1), 2, 1).unsqueeze(0), descending=False)
+        d, n = torch.sort(torch.sum(torch.abs(torch.add(tensor2, -1, t1)).unsqueeze(0), 1), descending=False)
         n = n[:, :5]
         d = d[:, :5]
         dist = torch.cat((dist, d))
