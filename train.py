@@ -171,7 +171,7 @@ for epoch in tqdm(range(max_epoch)):
         loss1 = torch.mean(loss1)
 
         loss2 = criterion2(output, target)
-        loss = loss1 + 0.5 * loss2
+        loss = 0.5*loss1 + loss2
         # print(loss)
 
         # ##################
@@ -240,12 +240,12 @@ for epoch in tqdm(range(max_epoch)):
 
         output = model.forward(inputs) # (batch x word_emb_dim)
 
-        loss_val = F.cosine_similarity(output, target)
-        loss_val = 1 - loss_val
-        loss_val = torch.sum(loss_val/(dataset_size-split))
+        # loss_val = F.cosine_similarity(output, target)
+        # loss_val = 1 - loss_val
+        # loss_val = torch.sum(loss_val/(dataset_size-split))
         
-        # loss_val = F.mse_loss(output, target, size_average=False)
-        # loss_val /= (dataset_size-split)
+        loss_val = F.mse_loss(output, target, reduction='sum')
+        loss_val /= (dataset_size-split)
         total_val_loss += loss_val.item()
         if it < 1:
             cos_dist = cosine_similarity(output, word_embedding)
@@ -264,7 +264,9 @@ for epoch in tqdm(range(max_epoch)):
                 # for j in dist[i]:
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
+    print()
     print('total validation loss =', total_val_loss)
+    print()
     info_val = {
         'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss,
     }
