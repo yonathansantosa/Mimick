@@ -168,7 +168,7 @@ else:
     beta = 1        
 word_embedding = dataset.embedding_vectors.to(device)
 
-for epoch in tqdm(range(max_epoch)):
+for epoch in range(max_epoch):
     for it, (X, y) in enumerate(train_loader):
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words)
