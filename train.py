@@ -6,6 +6,7 @@ from torch.autograd import Variable
 from torch.utils.data import SubsetRandomSampler, DataLoader
 
 import numpy as np
+import math
 
 from model import *
 from charembedding import Char_embedding
