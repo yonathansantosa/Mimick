@@ -76,12 +76,12 @@ def pairwise_distances(x, y=None, loss=False):
         return d, n
 
 def decaying_alpha_beta(epoch=0, loss_fn='cosine'):
-    decay = math.exp(epoch/200)
+    decay = math.exp(-epoch/200)
     if loss_fn == 'cosine':
         alpha = 1
-        beta = 0.5*decay
+        beta = decay
     else:
-        alpha = 1*decay
+        alpha = decay
         beta = 1
     return alpha, beta
 
@@ -111,6 +111,7 @@ parser.add_argument('--local', default=False, action='store_true')
 parser.add_argument('--loss_fn', default='mse')
 parser.add_argument('--dropout', default=0)
 parser.add_argument('--bsize', default=64)
+parser.add_argument('--epoch', default=0)
 
 args = parser.parse_args()
 
@@ -197,7 +198,7 @@ step = 0
       
 word_embedding = dataset.embedding_vectors.to(device)
 
-for epoch in tqdm(range(max_epoch)):
+for epoch in tqdm(range(max_epoch), initial=int(args.epoch)):
     for it, (X, y) in enumerate(train_loader):
         alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
