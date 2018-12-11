@@ -286,7 +286,7 @@ for epoch in tqdm(range(max_epoch), initial=int(args.epoch)):
         loss_val1 = F.mse_loss(output, target, reduction='sum')
         loss_val2 = F.cosine_similarity(output, target).sum()
         loss_val = alpha*loss_val1 + beta*loss_val2
-        loss_val /= ((dataset_size-split)*dataset.emb_dim)
+        loss_val /= dataset_size-split
         total_val_loss += loss_val.item()
         if it < 1:
             # distance, nearest_neighbor = l2_dist(output.cpu(), word_embedding.cpu())
