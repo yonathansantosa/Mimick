@@ -190,13 +190,14 @@ else:
     if args.load or int(args.run) > 1 and os.path.exists('%s/%s.pth' % (saved_model_path, args.model)):
         model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
         
-# optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+word_embedding = dataset.embedding_vectors.to(device)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+# optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 step = 0
 
 # *Training
       
-word_embedding = dataset.embedding_vectors.to(device)
+
 
 for epoch in tqdm(range(max_epoch), initial=int(args.epoch)):
     for it, (X, y) in enumerate(train_loader):
