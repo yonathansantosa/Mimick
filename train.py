@@ -74,6 +74,16 @@ def pairwise_distances(x, y=None, loss=False):
         d = d[:, :5]
         return d, n
 
+def decaying_alpha_beta(epoch=0, loss_fn='cosine'):
+    decay = np.exp(epoch/200)
+    if loss_fn == 'cosine':
+        alpha = 1
+        beta = 0.5*decay
+    else:
+        alpha = 1*decay
+        beta = 1
+    return alpha, beta
+
 # *Argument parser
 parser = argparse.ArgumentParser(
     description='Conditional Text Generation: Train Discriminator'
@@ -183,16 +193,12 @@ optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 step = 0
 
 # *Training
-if args.loss_fn == 'cosine':
-    alpha = 1
-    beta = 0.5
-else:
-    alpha = 0.5
-    beta = 1        
+      
 word_embedding = dataset.embedding_vectors.to(device)
 
 for epoch in tqdm(range(max_epoch)):
     for it, (X, y) in enumerate(train_loader):
+        alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words)
         inputs = Variable(inputs).to(device) # (length x batch x char_emb_dim)
