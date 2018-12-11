@@ -304,10 +304,10 @@ for epoch in tqdm(range(max_epoch), initial=int(args.epoch)):
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
     print()
-    print('total validation loss =', total_val_loss)
+    print('total validation loss =', total_val_loss/10)
     print()
     info_val = {
-        'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss,
+        'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss/10,
     }
 
     if args.run != 0:
