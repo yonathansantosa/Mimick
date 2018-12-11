@@ -50,7 +50,7 @@ def cosine_similarity(tensor1, tensor2):
 #         neighbor = torch.cat((neighbor, n))
 
 #     return dist, neighbor
-def pairwise_distances(x, y=None):
+def pairwise_distances(x, y=None, loss=False):
     '''
     Input: x is a Nxd matrix
            y is an optional Mxd matirx
@@ -64,12 +64,15 @@ def pairwise_distances(x, y=None):
     else:
         y = x
         y_norm = x_norm.view(1, -1)
-
-    dist = x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))
-    d, n = torch.sort(dist, descending=False)
-    n = n[:, :5]
-    d = d[:, :5]
-    return d, n
+    if loss:
+        result = x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))
+        return result
+    else:
+        dist = x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))        
+        d, n = torch.sort(dist, descending=False)
+        n = n[:, :5]
+        d = d[:, :5]
+        return d, n
 
 # *Argument parser
 parser = argparse.ArgumentParser(
@@ -188,7 +191,7 @@ else:
     beta = 1        
 word_embedding = dataset.embedding_vectors.to(device)
 
-for epoch in range(max_epoch):
+for epoch in tqdm(range(max_epoch)):
     for it, (X, y) in enumerate(train_loader):
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words)
@@ -272,8 +275,10 @@ for epoch in range(max_epoch):
         # loss_val = 1 - loss_val
         # loss_val = torch.sum(loss_val/(dataset_size-split))
         
-        loss_val = F.mse_loss(output, target, reduction='sum')
-        loss_val /= (dataset_size-split)
+        loss_val1 = F.mse_loss(output, target, reduction='sum')
+        loss_val2 = F.cosine_similarity(output, target).sum()
+        loss_val = alpha*loss_val1 + beta*loss_val2
+        loss_val /= ((dataset_size-split)*dataset.emb_dim)
         total_val_loss += loss_val.item()
         if it < 1:
             # distance, nearest_neighbor = l2_dist(output.cpu(), word_embedding.cpu())
