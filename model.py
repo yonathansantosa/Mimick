@@ -40,7 +40,7 @@ class mimick_cnn(nn.Module):
             nn.Hardtanh(),
             nn.Linear(400, 350),
             nn.Hardtanh(),
-            nn.Linear(450, emb_dim),
+            nn.Linear(350, emb_dim),
             # nn.Hardtanh(),
             # nn.Linear(400, 300),
             # nn.Hardtanh()
