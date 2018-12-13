@@ -189,8 +189,8 @@ elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
         
 word_embedding = dataset.embedding_vectors.to(device)
-# optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+# optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 step = 0
 
 # *Training
@@ -243,7 +243,6 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             # distance, nearest_neighbor = l2_dist(output[random_input].unsqueeze(0).cpu(), word_embedding.cpu())
             distance, nearest_neighbor = pairwise_distances(output[random_input].unsqueeze(0), word_embedding)
             loss_dist = torch.dist(output[random_input], target[random_input])
-
             tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
             tqdm.write('')
