@@ -189,26 +189,22 @@ elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
         
 word_embedding = dataset.embedding_vectors.to(device)
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-# optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+# optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 step = 0
 
 # *Training
-      
-
-
 for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
     for it, (X, y) in enumerate(train_loader):
         alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
-        inputs = char_embed.char_split(words)
+        inputs = model.char_split(words)
         inputs = Variable(inputs).to(device) # (length x batch x char_emb_dim)
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
 
         model.zero_grad()
 
         output = model.forward(inputs) # (batch x word_emb_dim)
-    
         loss1 = torch.mean(1 - criterion1(output, target))
         loss2 = criterion2(output, target)
         loss = alpha*loss1 + beta*loss2
@@ -269,7 +265,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
-        inputs = char_embed.char_split(words, dropout=float(args.dropout))
+        inputs = model.char_split(words, dropout=float(args.dropout))
        
         inputs = inputs.to(device) # (length x batch x char_emb_dim)
         target = target.to(device) # (batch x word_emb_dim)
