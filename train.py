@@ -147,7 +147,7 @@ max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
 momentum = 0.2
 
-char_embed = Char_embedding(char_emb_dim, max_len=char_max_len, random=True)
+# char_embed = Char_embedding(char_emb_dim, max_len=char_max_len, random=True)
 # if args.load or int(args.run) > 1:
 #     char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
@@ -175,7 +175,7 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 if args.model == 'lstm':
     model = mimick(char_emb_dim, char_embed.char_embedding, dataset.emb_dim, 128, 2)
 else:
-    model = mimick_cnn(char_max_len=char_max_len, char_emb_dim=char_emb_dim, emb_dim=300, num_feature=100, random=False)
+    model = mimick_cnn(char_max_len=char_max_len, char_emb_dim=char_emb_dim, emb_dim=300, num_feature=100, random=True)
 
 model.to(device)
 # criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
@@ -243,7 +243,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             # distance, nearest_neighbor = l2_dist(output[random_input].unsqueeze(0).cpu(), word_embedding.cpu())
             distance, nearest_neighbor = pairwise_distances(output[random_input].unsqueeze(0), word_embedding)
             loss_dist = torch.dist(output[random_input], target[random_input])
-                        
+            print(target[random_input])
             tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
             tqdm.write('')
