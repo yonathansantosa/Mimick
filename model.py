@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+import numpy as np
+
+
 class mimick(nn.Module):
     def __init__(self, char_emb_dim, char_emb, emb_dim, n_h, n_hl):
         super(mimick, self).__init__()
