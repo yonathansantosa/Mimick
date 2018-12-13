@@ -189,7 +189,7 @@ elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
         
 word_embedding = dataset.embedding_vectors.to(device)
-optimizer = optim.Adam(list(model.parameters()) + list(char_embed.parameters()), lr=learning_rate)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 step = 0
 
