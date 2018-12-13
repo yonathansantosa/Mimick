@@ -13,7 +13,7 @@ from charembedding import Char_embedding
 from wordembedding import Word_embedding
 
 import argparse
-from tqdm import tqdm
+from tqdm import trange
 import os
 from logger import Logger
 import shutil
@@ -76,7 +76,7 @@ def pairwise_distances(x, y=None, loss=False):
         return d, n
 
 def decaying_alpha_beta(epoch=0, loss_fn='cosine'):
-    decay = math.exp(-epoch/200)
+    decay = math.exp(-float(epoch)/200)
     if loss_fn == 'cosine':
         alpha = 1
         beta = decay
@@ -184,11 +184,10 @@ model.to(device)
 criterion1 = nn.CosineSimilarity()
 criterion2 = nn.MSELoss()
 
-if not os.path.exists(saved_model_path):
+if args.load:
+    model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
+elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
-else:
-    if args.load or int(args.run) > 1 and os.path.exists('%s/%s.pth' % (saved_model_path, args.model)):
-        model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
         
 word_embedding = dataset.embedding_vectors.to(device)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -199,7 +198,7 @@ step = 0
       
 
 
-for epoch in tqdm(range(max_epoch), initial=int(args.epoch)):
+for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
     for it, (X, y) in enumerate(train_loader):
         alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
