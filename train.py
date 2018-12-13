@@ -13,7 +13,7 @@ from charembedding import Char_embedding
 from wordembedding import Word_embedding
 
 import argparse
-from tqdm import trange
+from tqdm import trange, tqdm
 import os
 from logger import Logger
 import shutil
@@ -148,8 +148,8 @@ learning_rate = float(args.lr)
 momentum = 0.2
 
 char_embed = Char_embedding(char_emb_dim, max_len=char_max_len, random=True)
-if args.load or int(args.run) > 1 and os.path.exists('%s/charembed.pth' % saved_model_path):
-    char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
+# if args.load or int(args.run) > 1:
+#     char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 
@@ -178,7 +178,6 @@ else:
     model = mimick_cnn(char_emb_dim, char_embed.char_embedding, dataset.emb_dim, 10000)
 
 model.to(device)
-
 # criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 
 criterion1 = nn.CosineSimilarity()
@@ -190,7 +189,7 @@ elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
         
 word_embedding = dataset.embedding_vectors.to(device)
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = optim.Adam(list(model.parameters()) + list(char_embed.parameters()), lr=learning_rate)
 # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 step = 0
 
@@ -264,7 +263,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         copy_tree(logger_dir, cloud_dir+logger_dir)
         
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
-    torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
+    # torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
     
     total_val_loss = 0.
     
