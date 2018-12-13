@@ -31,7 +31,7 @@ class mimick_cnn(nn.Module):
         super(mimick_cnn, self).__init__()
         table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
         self.char = np.transpose(table[0])
-        self.max_len = max_len
+        self.max_len = char_max_len
 
         if random:
             self.embed = nn.Embedding(len(self.char), char_emb_dim)
