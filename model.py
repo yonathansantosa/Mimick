@@ -34,14 +34,14 @@ class mimick_cnn(nn.Module):
         self.max_len = char_max_len
 
         if random:
-            self.embed = nn.Embedding(len(self.char), char_emb_dim)
+            self.embed = nn.Embedding(len(self.char), char_emb_dim, sparse=True)
         else:
             self.weight_char = np.transpose(table[1:].astype(np.float))
             self.weight_char = self.weight_char[:,:char_emb_dim]
 
             self.weight_char = torch.from_numpy(self.weight_char)
             
-            self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=False)
+            self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=False, sparse=True)
 
         self.char2idx = {}
         self.idx2char = {}
@@ -59,11 +59,11 @@ class mimick_cnn(nn.Module):
 
         self.mlp = nn.Sequential(
             nn.Linear(5*num_feature, 450),
-            nn.Hardtanh(),
+            nn.Hardtanh(min_val=-3.0, max_val=3.0),
             nn.Linear(450, 400),
-            nn.Hardtanh(),
+            nn.Hardtanh(min_val=-3.0, max_val=3.0),
             nn.Linear(400, 350),
-            nn.Hardtanh(),
+            nn.Hardtanh(min_val=-3.0, max_val=3.0),
             nn.Linear(350, emb_dim),
             # nn.Hardtanh(),
             # nn.Linear(400, 300),

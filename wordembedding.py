@@ -33,7 +33,7 @@ class Word_embedding:
             self.stoi = polyglot_emb.vocabulary.word_id
             self.itos = polyglot_emb.vocabulary.id_word
         
-        self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=True)
+        self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=True, sparse=True)
         self.emb_dim = self.embedding_vectors.size(1)
     def __getitem__(self, index):
         return (torch.tensor([index], dtype=torch.long), self.word_embedding(torch.tensor([index])).squeeze())
