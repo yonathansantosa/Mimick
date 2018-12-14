@@ -189,10 +189,25 @@ elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
         
 word_embedding = dataset.embedding_vectors.to(device)
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+# optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+optimizer1 = optim.Adam(
+    [
+        {"params": model.conv2.parameters(), "lr": learning_rate},
+        {"params": model.conv3.parameters(), "lr": learning_rate},
+        {"params": model.conv4.parameters(), "lr": learning_rate},
+        {"params": model.conv5.parameters(), "lr": learning_rate},
+        {"params": model.conv6.parameters(), "lr": learning_rate},
+        {"params": model.mlp.parameters(), "lr": learning_rate},
+    ],
+)
+optimizer2 = optim.SparseAdam(
+    [
+        {"params": model.embed.parameters(), "lr": learning_rate},
+    ],
+)
 step = 0
-
+print(model.modules())
 # *Training
 for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
     for it, (X, y) in enumerate(train_loader):
@@ -224,8 +239,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 logger.scalar_summary(tag, value, step)
             
         loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
+        optimizer1.step()
+        optimizer1.zero_grad()
+        optimizer2.step()
+        optimizer2.zero_grad()
 
         if it % int(dataset_size/(batch_size*5)) == 0:
             tqdm.write('loss = %.4f' % loss)
