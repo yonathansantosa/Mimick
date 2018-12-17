@@ -66,7 +66,7 @@ def pairwise_distances(x, y=None, loss=False):
         y = x
         y_norm = x_norm.view(1, -1)
     if loss:
-        result = x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))
+        result = (x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))).diag()
         return result
     else:
         dist = x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))        
@@ -281,8 +281,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
     # torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
     
-    total_val_loss = 0.
-    cosine_loss = 0.
+    l2_dist = 0.
+    cosine_dist = 0.
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
         inputs = model.char_split(words, dropout=float(args.dropout))
@@ -298,11 +298,12 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # loss_val = 1 - loss_val
         # loss_val = torch.sum(loss_val/(dataset_size-split))
         
-        loss_val1 = (1 - F.cosine_similarity(output, target)).sum() / dataset_size-split
-        loss_val2 = F.mse_loss(output, target, reduction='sum') / dataset_size-split        
-        loss_val = alpha*loss_val1 + beta*loss_val2
-        total_val_loss += loss_val.item()
-        cosine_loss += loss_val1.item()
+        cosine_dist += ((1 - F.cosine_similarity(output, target)).sum() / (dataset_size-split)).item()
+        # loss_val2 = F.mse_loss(output, target, reduction='sum')
+        l2_dist += (torch.sqrt(pairwise_distances(output, target, True)).sum() / (dataset_size-split)).item()
+        # loss_val = alpha*loss_val1 + beta*loss_val2
+        # total_val_loss += loss_val.item() / (dataset_size-split)
+        # cosine_loss += loss_val1.item() / (dataset_size-split)
         if it < 1:
             # distance, nearest_neighbor = l2_dist(output.cpu(), word_embedding.cpu())
             distance, nearest_neighbor = pairwise_distances(output, word_embedding)
@@ -319,14 +320,14 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
     print()
-    print('total validation loss =', total_val_loss)
-    print('cosine validation loss =', cosine_loss)
+    print('l2 validation loss =', l2_dist)
+    print('cosine validation loss =', cosine_dist)
     print()
     info_val = {
-        'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss
+        'loss-Train-%s-run%s' % (args.model, args.run) : l2_dist
     }
     info_cosine_val = {
-        'loss-Train-%s-run%s' % (args.model, args.run) : cosine_loss
+        'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
     }
 
     if args.run != 0:
