@@ -320,6 +320,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 # tqdm.write(dist_str)
     print()
     print('total validation loss =', total_val_loss)
+    print('cosine validation loss =', cosine_loss)
     print()
     info_val = {
         'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss
