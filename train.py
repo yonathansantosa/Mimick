@@ -121,6 +121,8 @@ cloud_dir = '/content/gdrive/My Drive/train_dropout/'
 saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
 logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_model_path, args.run)
+logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_model_path, args.run)
+
 
 if not args.local:
     # logger_dir = cloud_dir + logger_dir
@@ -129,6 +131,8 @@ if not args.local:
 print(saved_model_path)
 logger = Logger(logger_dir)
 logger_val = Logger(logger_val_dir)
+logger_val_cosine = Logger(logger_val_cosine_dir)
+
 
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -318,14 +322,19 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     print('total validation loss =', total_val_loss)
     print()
     info_val = {
-        'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss,
+        'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss
+    }
+    info_cosine_val = {
         'loss-Train-%s-run%s' % (args.model, args.run) : cosine_loss
     }
 
     if args.run != 0:
         for tag, value in info_val.items():
             logger_val.scalar_summary(tag, value, step)
+        for tag, value in info_cosine_val.items():
+            logger_val_cosine.scalar_summary(tag, value, step)    
     model.train()
 
     if not args.local:
         copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
+        copy_tree(logger_val_cosine_dir, cloud_dir+logger_val_cosine_dir)
