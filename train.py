@@ -79,9 +79,9 @@ def decaying_alpha_beta(epoch=0, loss_fn='cosine'):
     decay = math.exp(-float(epoch)/200)
     if loss_fn == 'cosine':
         alpha = 1
-        beta = decay
+        beta = 1-decay
     else:
-        alpha = decay
+        alpha = 1-decay
         beta = 1
     return alpha, beta
 
@@ -175,7 +175,7 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 if args.model == 'lstm':
     model = mimick(char_emb_dim, char_embed.char_embedding, dataset.emb_dim, 128, 2)
 else:
-    model = mimick_cnn(char_max_len=char_max_len, char_emb_dim=char_emb_dim, emb_dim=300, num_feature=100, random=True)
+    model = mimick_cnn(char_max_len=char_max_len, char_emb_dim=char_emb_dim, emb_dim=300, num_feature=200, random=True)
 
 model.to(device)
 # criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
@@ -278,7 +278,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     # torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
     
     total_val_loss = 0.
-    
+    cosine_loss = 0.
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
         inputs = model.char_split(words, dropout=float(args.dropout))
@@ -294,11 +294,11 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # loss_val = 1 - loss_val
         # loss_val = torch.sum(loss_val/(dataset_size-split))
         
-        loss_val1 = F.mse_loss(output, target, reduction='sum')
-        loss_val2 = F.cosine_similarity(output, target).sum()
+        loss_val1 = (1 - F.cosine_similarity(output, target).sum()) / dataset_size-split
+        loss_val2 = F.mse_loss(output, target, reduction='sum') / dataset_size-split        
         loss_val = alpha*loss_val1 + beta*loss_val2
-        loss_val /= dataset_size-split
         total_val_loss += loss_val.item()
+        cosine_loss += loss_val1.item()
         if it < 1:
             # distance, nearest_neighbor = l2_dist(output.cpu(), word_embedding.cpu())
             distance, nearest_neighbor = pairwise_distances(output, word_embedding)
@@ -315,10 +315,11 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
     print()
-    print('total validation loss =', total_val_loss/10)
+    print('total validation loss =', total_val_loss)
     print()
     info_val = {
-        'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss/10,
+        'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss,
+        'loss-Train-%s-run%s' % (args.model, args.run) : cosine_loss
     }
 
     if args.run != 0:
