@@ -298,7 +298,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # loss_val = 1 - loss_val
         # loss_val = torch.sum(loss_val/(dataset_size-split))
         
-        loss_val1 = (1 - F.cosine_similarity(output, target).sum()) / dataset_size-split
+        loss_val1 = (1 - F.cosine_similarity(output, target)).sum() / dataset_size-split
         loss_val2 = F.mse_loss(output, target, reduction='sum') / dataset_size-split        
         loss_val = alpha*loss_val1 + beta*loss_val2
         total_val_loss += loss_val.item()
