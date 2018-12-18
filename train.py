@@ -76,12 +76,12 @@ def pairwise_distances(x, y=None, loss=False):
         return d, n
 
 def decaying_alpha_beta(epoch=0, loss_fn='cosine'):
-    decay = math.exp(-float(epoch)/200)
+    # decay = math.exp(-float(epoch)/200)
     if loss_fn == 'cosine':
         alpha = 1
-        beta = 1-decay
+        beta = 0.5
     else:
-        alpha = 1-decay
+        alpha = 0.5
         beta = 1
     return alpha, beta
 
