@@ -299,7 +299,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # loss_val = 1 - loss_val
         # loss_val = torch.sum(loss_val/(dataset_size-split))
         
-        cosine_dist += ((1 - F.cosine_similarity(output, target)).sum() / ((dataset_size-split)*emb_dim)).item()
+        cosine_dist += ((1 - F.cosine_similarity(output, target)).sum() / ((dataset_size-split))).item()
         mse_loss += (F.mse_loss(output, target, reduction='sum') / ((dataset_size-split)*emb_dim)).item()
         # mse_loss += (torch.sqrt(pairwise_distances(output, target, True)).sum() / ((dataset_size-split)*emb_dim)).item()
         # mse_loss += (torch.sqrt(pairwise_distances(output, target, True)).sum() / ((dataset_size-split)*emb_dim)).item()
