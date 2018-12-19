@@ -66,10 +66,10 @@ def pairwise_distances(x, y=None, loss=False):
         y = x
         y_norm = x_norm.view(1, -1)
     if loss:
-        result = (x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))).diag()
+        result = F.pairwise_distance(x, y)
         return result
     else:
-        dist = x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))        
+        dist = x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1)) 
         d, n = torch.sort(dist, descending=False)
         n = n[:, :5]
         d = d[:, :5]
@@ -143,6 +143,7 @@ char_max_len = int(args.charlen)
 random_seed = 64
 shuffle_dataset = False
 validation_split = .8
+emb_dim=300
 
 # *Hyperparameter/
 batch_size = int(args.bsize)
@@ -179,7 +180,7 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 if args.model == 'lstm':
     model = mimick(char_emb_dim, char_embed.char_embedding, dataset.emb_dim, 128, 2)
 else:
-    model = mimick_cnn(char_max_len=char_max_len, char_emb_dim=char_emb_dim, emb_dim=300, num_feature=200, random=True)
+    model = mimick_cnn(char_max_len=char_max_len, char_emb_dim=char_emb_dim, emb_dim=emb_dim, num_feature=200, random=True)
 
 model.to(device)
 # criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
@@ -281,7 +282,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
     # torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
     
-    l2_dist = 0.
+    mse = 0.
     cosine_dist = 0.
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
@@ -298,14 +299,16 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # loss_val = 1 - loss_val
         # loss_val = torch.sum(loss_val/(dataset_size-split))
         
-        cosine_dist += ((1 - F.cosine_similarity(output, target)).sum() / (dataset_size-split)).item()
-        # loss_val2 = F.mse_loss(output, target, reduction='sum')
-        l2_dist += (torch.sqrt(pairwise_distances(output, target, True)).sum() / (dataset_size-split)).item()
+        cosine_dist += ((1 - F.cosine_similarity(output, target)).sum() / ((dataset_size-split)*emb_dim)).item()
+        mse_loss += F.mse_loss(output, target, reduction='sum') / ((dataset_size-split)*emb_dim).item()
+        # mse_loss += (torch.sqrt(pairwise_distances(output, target, True)).sum() / ((dataset_size-split)*emb_dim)).item()
+        # mse_loss += (torch.sqrt(pairwise_distances(output, target, True)).sum() / ((dataset_size-split)*emb_dim)).item()
+        
         # loss_val = alpha*loss_val1 + beta*loss_val2
         # total_val_loss += loss_val.item() / (dataset_size-split)
         # cosine_loss += loss_val1.item() / (dataset_size-split)
         if it < 1:
-            # distance, nearest_neighbor = l2_dist(output.cpu(), word_embedding.cpu())
+            # distance, nearest_neighbor = mse_loss(output.cpu(), word_embedding.cpu())
             distance, nearest_neighbor = pairwise_distances(output, word_embedding)
 
             # dist, nearest_neighbor = torch.sort(distance, descending=False)
@@ -320,15 +323,16 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
     print()
-    print('l2 validation loss =', l2_dist)
+    print('l2 validation loss =', mse_loss)
     print('cosine validation loss =', cosine_dist)
+    print('total loss =', alpha*cosine_dist + beta*mse_loss)
     print()
     info_val = {
-        'loss-Train-%s-run%s' % (args.model, args.run) : l2_dist
+        'loss-Train-%s-run%s' % (args.model, args.run) : mse_loss
     }
-    info_cosine_val = {
-        'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
-    }
+    # info_cosine_val = {
+    #     'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
+    # }
 
     if args.run != 0:
         for tag, value in info_val.items():
