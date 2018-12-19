@@ -330,9 +330,9 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     info_val = {
         'loss-Train-%s-run%s' % (args.model, args.run) : mse_loss
     }
-    # info_cosine_val = {
-    #     'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
-    # }
+    info_cosine_val = {
+        'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
+    }
 
     if args.run != 0:
         for tag, value in info_val.items():
