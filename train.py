@@ -322,13 +322,14 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 # for j in dist[i]:
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
+    total_val_loss = alpha*cosine_dist + beta*mse_loss
     print()
     print('l2 validation loss =', mse_loss)
     print('cosine validation loss =', cosine_dist)
-    print('total loss =', alpha*cosine_dist + beta*mse_loss)
+    print('total loss =', total_val_loss)
     print()
     info_val = {
-        'loss-Train-%s-run%s' % (args.model, args.run) : mse_loss
+        'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss
     }
     info_cosine_val = {
         'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
