@@ -282,7 +282,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
     # torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
     
-    mse = 0.
+    mse_loss = 0.
     cosine_dist = 0.
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
