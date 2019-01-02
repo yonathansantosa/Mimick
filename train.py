@@ -37,6 +37,12 @@ def cosine_similarity(tensor1, tensor2):
     dist = dist[:, :5]
     return dist, neighbor
 
+def init_weights(m):
+    if type(m) == nn.Linear or type(m) == nn.Conv2d:
+        m.weight.data.fill_(0.01)
+        m.bias.data.fill_(0.01)
+
+
 # def l2_dist(tensor1, tensor2):
 #     dist = torch.FloatTensor(0)
 #     neighbor = torch.LongTensor(0)
@@ -211,6 +217,9 @@ optimizer2 = optim.SparseAdam(
         {"params": model.embed.parameters(), "lr": learning_rate},
     ],
 )
+
+model.apply(init_weights)
+
 step = 0
 print(model.modules())
 # *Training
@@ -281,7 +290,12 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
     # torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
-    
+    model.conv2.weight.data.fill_(0.01)
+    model.conv3.weight.data.fill_(0.01)
+    model.conv4.weight.data.fill_(0.01)
+    model.conv5.weight.data.fill_(0.01)
+    model.conv6.weight.data.fill_(0.01)
+
     mse_loss = 0.
     cosine_dist = 0.
     for it, (X, target) in enumerate(validation_loader):
@@ -294,19 +308,9 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         model.zero_grad()
 
         output = model.forward(inputs) # (batch x word_emb_dim)
-
-        # loss_val = F.cosine_similarity(output, target)
-        # loss_val = 1 - loss_val
-        # loss_val = torch.sum(loss_val/(dataset_size-split))
         
-        cosine_dist += ((1 - F.cosine_similarity(output, target)).sum() / ((dataset_size-split))).item()
+        cosine_dist += ((1 - F.cosine_similarity(output, target)) / ((dataset_size-split))).sum().item()
         mse_loss += (F.mse_loss(output, target, reduction='sum') / ((dataset_size-split)*emb_dim)).item()
-        # mse_loss += (torch.sqrt(pairwise_distances(output, target, True)).sum() / ((dataset_size-split)*emb_dim)).item()
-        # mse_loss += (torch.sqrt(pairwise_distances(output, target, True)).sum() / ((dataset_size-split)*emb_dim)).item()
-        
-        # loss_val = alpha*loss_val1 + beta*loss_val2
-        # total_val_loss += loss_val.item() / (dataset_size-split)
-        # cosine_loss += loss_val1.item() / (dataset_size-split)
         if it < 1:
             # distance, nearest_neighbor = mse_loss(output.cpu(), word_embedding.cpu())
             distance, nearest_neighbor = pairwise_distances(output, word_embedding)
