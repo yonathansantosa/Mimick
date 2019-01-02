@@ -344,10 +344,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     if args.run != 0:
         for tag, value in info_val.items():
             logger_val.scalar_summary(tag, value, step)
-        for tag, value in info_cosine_val.items():
-            logger_val_cosine.scalar_summary(tag, value, step)    
+        # for tag, value in info_cosine_val.items():
+        #     logger_val_cosine.scalar_summary(tag, value, step)    
     model.train()
 
     if not args.local:
         copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
-        copy_tree(logger_val_cosine_dir, cloud_dir+logger_val_cosine_dir)
+        # copy_tree(logger_val_cosine_dir, cloud_dir+logger_val_cosine_dir)
