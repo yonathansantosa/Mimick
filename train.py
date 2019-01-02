@@ -310,7 +310,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         output = model.forward(inputs) # (batch x word_emb_dim)
         
         cosine_dist += ((1 - F.cosine_similarity(output, target)) / ((dataset_size-split))).sum().item()
-        mse_loss += (F.mse_loss(output, target, reduction='sum') / ((dataset_size-split)*emb_dim)).item()
+        # mse_loss += (F.mse_loss(output, target, reduction='sum') / ((dataset_size-split)*emb_dim)).item()
+        mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
         if it < 1:
             # distance, nearest_neighbor = mse_loss(output.cpu(), word_embedding.cpu())
             distance, nearest_neighbor = pairwise_distances(output, word_embedding)
