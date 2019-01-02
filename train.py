@@ -149,7 +149,6 @@ char_max_len = int(args.charlen)
 random_seed = 64
 shuffle_dataset = False
 validation_split = .8
-emb_dim=300
 
 # *Hyperparameter/
 batch_size = int(args.bsize)
@@ -163,6 +162,7 @@ momentum = 0.2
 #     char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
+emb_dim = dataset.emb_dim
 
 dataset_size = len(dataset)
 indices = list(range(dataset_size))
@@ -234,9 +234,9 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         model.zero_grad()
 
         output = model.forward(inputs) # (batch x word_emb_dim)
-        loss1 = torch.mean(1 - criterion1(output, target))
-        loss2 = criterion2(output, target)
-        loss = alpha*loss1 + beta*loss2
+        # loss1 = torch.mean(1 - criterion1(output, target))
+        loss = criterion2(output, target)
+        # loss = alpha*loss1 + beta*loss2
         # print(loss)
 
         # ##################
@@ -309,7 +309,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
 
         output = model.forward(inputs) # (batch x word_emb_dim)
         
-        cosine_dist += ((1 - F.cosine_similarity(output, target)) / ((dataset_size-split))).sum().item()
+        # cosine_dist += ((1 - F.cosine_similarity(output, target)) / ((dataset_size-split))).sum().item()
         # mse_loss += (F.mse_loss(output, target, reduction='sum') / ((dataset_size-split)*emb_dim)).item()
         mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
         if it < 1:
@@ -327,18 +327,19 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 # for j in dist[i]:
                 #     dist_str += '%.4f ' % j
                 # tqdm.write(dist_str)
-    total_val_loss = alpha*cosine_dist + beta*mse_loss
+    # total_val_loss = alpha*cosine_dist + beta*mse_loss
+    total_val_loss = mse_loss
     print()
-    print('l2 validation loss =', mse_loss)
-    print('cosine validation loss =', cosine_dist)
+    # print('l2 validation loss =', mse_loss)
+    # print('cosine validation loss =', cosine_dist)
     print('total loss =', total_val_loss)
     print()
     info_val = {
         'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss
     }
-    info_cosine_val = {
-        'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
-    }
+    # info_cosine_val = {
+    #     'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
+    # }
 
     if args.run != 0:
         for tag, value in info_val.items():
