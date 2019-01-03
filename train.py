@@ -187,7 +187,7 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 if args.model == 'lstm':
     model = mimick(char_emb_dim, char_embed.char_embedding, dataset.emb_dim, 128, 2)
 else:
-    model = mimick_cnn(char_max_len=char_max_len, char_emb_dim=char_emb_dim, emb_dim=emb_dim, num_feature=200, random=True, asc=args.asc)
+    model = mimick_cnn(char_max_len=char_max_len, char_emb_dim=char_emb_dim, emb_dim=emb_dim, num_feature=200, random=False, asc=args.asc)
 
 model.to(device)
 # criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()

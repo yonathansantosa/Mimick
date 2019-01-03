@@ -33,6 +33,7 @@ class mimick_cnn(nn.Module):
         self.asc = asc
         if random:
             table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
+            self.weight_char = np.transpose(table[1:].astype(np.float))
             self.char = np.transpose(table[0])
             self.embed = nn.Embedding(len(self.char), char_emb_dim, sparse=True)
         elif self.asc:
