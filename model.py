@@ -43,7 +43,7 @@ class mimick_cnn(nn.Module):
 
             self.weight_char = torch.from_numpy(self.weight_char)
             
-            self.char_embedding = nn.Embedding.from_pretrained(self.weight_char, freeze=True, sparse=True)
+            self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=True, sparse=True)
         else:
             table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
             self.char = np.transpose(table[0])
