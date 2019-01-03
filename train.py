@@ -291,11 +291,6 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
     # torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
-    model.conv2.weight.data.fill_(0.01)
-    model.conv3.weight.data.fill_(0.01)
-    model.conv4.weight.data.fill_(0.01)
-    model.conv5.weight.data.fill_(0.01)
-    model.conv6.weight.data.fill_(0.01)
 
     mse_loss = 0.
     cosine_dist = 0.
