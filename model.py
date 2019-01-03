@@ -27,15 +27,25 @@ class mimick(nn.Module):
         return out
 
 class mimick_cnn(nn.Module):
-    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False):
+    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
         super(mimick_cnn, self).__init__()
-        table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
-        self.char = np.transpose(table[0])
         self.max_len = char_max_len
-
+        self.asc = asc
         if random:
+            table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
+            self.char = np.transpose(table[0])
             self.embed = nn.Embedding(len(self.char), char_emb_dim, sparse=True)
+        elif self.asc:
+            table = np.transpose(np.loadtxt('ascii.embedding.txt', dtype=str, delimiter=' ', comments='##'))
+            self.char = np.transpose(table[0])
+            self.weight_char = np.transpose(table[1:].astype(np.float))
+
+            self.weight_char = torch.from_numpy(self.weight_char)
+            
+            self.char_embedding = nn.Embedding.from_pretrained(self.weight_char, freeze=True, sparse=True)
         else:
+            table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
+            self.char = np.transpose(table[0])
             self.weight_char = np.transpose(table[1:].astype(np.float))
             self.weight_char = self.weight_char[:,:char_emb_dim]
 
@@ -45,17 +55,17 @@ class mimick_cnn(nn.Module):
 
         self.char2idx = {}
         self.idx2char = {}
-
+        self.char_emb_dim = self.weight_char.shape[1]
         for i, c in enumerate(self.char):
             self.char2idx[c] = int(i)
             self.idx2char[i] = c
         
         # self.embed = char_embedding
-        self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
-        self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim))
-        self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim))
-        self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim))
-        self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim))
+        self.conv2 = nn.Conv2d(1, num_feature, (2, self.char_emb_dim))
+        self.conv3 = nn.Conv2d(1, num_feature, (3, self.char_emb_dim))
+        self.conv4 = nn.Conv2d(1, num_feature, (4, self.char_emb_dim))
+        self.conv5 = nn.Conv2d(1, num_feature, (5, self.char_emb_dim))
+        self.conv6 = nn.Conv2d(1, num_feature, (6, self.char_emb_dim))
 
         self.mlp = nn.Sequential(
             nn.Linear(5*num_feature, 450),
