@@ -119,6 +119,7 @@ parser.add_argument('--dropout', default=0)
 parser.add_argument('--bsize', default=64)
 parser.add_argument('--epoch', default=0)
 parser.add_argument('--asc', default=False, action='store_true')
+parser.add_argument('--init_weight', default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -219,7 +220,7 @@ optimizer2 = optim.SparseAdam(
     ],
 )
 
-model.apply(init_weights)
+if args.init_weight: model.apply(init_weights)
 
 step = 0
 print(model.modules())
