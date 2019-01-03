@@ -205,11 +205,11 @@ word_embedding = dataset.embedding_vectors.to(device)
 # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 optimizer1 = optim.Adam(
     [
-        {"params": model.conv2.parameters(), "lr": learning_rate},
+        # {"params": model.conv2.parameters(), "lr": learning_rate},
         {"params": model.conv3.parameters(), "lr": learning_rate},
         {"params": model.conv4.parameters(), "lr": learning_rate},
         {"params": model.conv5.parameters(), "lr": learning_rate},
-        {"params": model.conv6.parameters(), "lr": learning_rate},
+        # {"params": model.conv6.parameters(), "lr": learning_rate},
         {"params": model.mlp.parameters(), "lr": learning_rate},
     ],
 )
