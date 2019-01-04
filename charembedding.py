@@ -4,29 +4,41 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Char_embedding:
-    def __init__(self, emb_dim=300, max_len=15, random=False):
+    def __init__(self, char_emb_dim=300, char_max_len=15, random=False, asc=False):
         '''
         Initializing character embedding
         Parameter:
         emb_dim = (int) embedding dimension for character embedding
+        ascii = mutually exclusive with random
         '''
-        table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
-        self.char = np.transpose(table[0])
-        self.max_len = max_len
-
+        self.char_max_len = char_max_len
+        self.asc = asc
         if random:
-            self.char_embedding = nn.Embedding(len(self.char), emb_dim)
-        else:
+            table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
             self.weight_char = np.transpose(table[1:].astype(np.float))
-            self.weight_char = self.weight_char[:,:emb_dim]
+            self.char = np.transpose(table[0])
+            self.embed = nn.Embedding(len(self.char), char_emb_dim)
+        elif self.asc:
+            table = np.transpose(np.loadtxt('ascii.embedding.txt', dtype=str, delimiter=' ', comments='##'))
+            self.char = np.transpose(table[0])
+            self.weight_char = np.transpose(table[1:].astype(np.float))
 
             self.weight_char = torch.from_numpy(self.weight_char)
             
-            self.char_embedding = nn.Embedding.from_pretrained(self.weight_char, freeze=False)
+            self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=True)
+        else:
+            table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
+            self.char = np.transpose(table[0])
+            self.weight_char = np.transpose(table[1:].astype(np.float))
+            self.weight_char = self.weight_char[:,:char_emb_dim]
+
+            self.weight_char = torch.from_numpy(self.weight_char)
+            
+            self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=False)
 
         self.char2idx = {}
         self.idx2char = {}
-
+        self.char_emb_dim = self.weight_char.shape[1]
         for i, c in enumerate(self.char):
             self.char2idx[c] = int(i)
             self.idx2char[i] = c
@@ -47,14 +59,14 @@ class Char_embedding:
 
         for word in sentence:
             c = list(word)
-            if len(c) > self.max_len:
-                # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.max_len]]
-                c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.max_len]]
-            elif len(c) <= self.max_len:
+            if len(c) > self.char_max_len:
+                # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
+                c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
+            elif len(c) <= self.char_max_len:
                 # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
                 c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]                
-                if len(c_idx) < self.max_len: c_idx.append(self.char2idx['<eow>'])
-                for i in range(self.max_len-len(c)-1):
+                if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
+                for i in range(self.char_max_len-len(c)-1):
                     c_idx.append(self.char2idx['<pad>'])
             char_data += [c_idx]
 

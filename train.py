@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.autograd import Variable
+from torch.autograd import Variable, gradcheck
 from torch.utils.data import SubsetRandomSampler, DataLoader
 
 import numpy as np
@@ -159,9 +159,9 @@ max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
 momentum = 0.2
 
-# char_embed = Char_embedding(char_emb_dim, max_len=char_max_len, random=True)
-# if args.load or int(args.run) > 1:
-#     char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
+char_embed = Char_embedding(char_emb_dim, char_max_len, random=True)
+if args.load or int(args.run) > 1:
+    char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 emb_dim = dataset.emb_dim
@@ -188,7 +188,7 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 if args.model == 'lstm':
     model = mimick(char_emb_dim, char_embed.char_embedding, dataset.emb_dim, 128, 2)
 else:
-    model = mimick_cnn(char_max_len=char_max_len, char_emb_dim=char_emb_dim, emb_dim=emb_dim, num_feature=200, random=False, asc=args.asc)
+    model = mimick_cnn(char_max_len=char_embed.char_max_len, char_emb_dim=char_embed.char_emb_dim, emb_dim=emb_dim, num_feature=100, random=False, asc=args.asc)
 
 model.to(device)
 # criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
@@ -203,22 +203,22 @@ elif not os.path.exists(saved_model_path):
         
 word_embedding = dataset.embedding_vectors.to(device)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-# optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
-optimizer1 = optim.Adam(
-    [
-        {"params": model.conv2.parameters(), "lr": learning_rate},
-        {"params": model.conv3.parameters(), "lr": learning_rate},
-        {"params": model.conv4.parameters(), "lr": learning_rate},
-        {"params": model.conv5.parameters(), "lr": learning_rate},
-        {"params": model.conv6.parameters(), "lr": learning_rate},
-        {"params": model.mlp.parameters(), "lr": learning_rate},
-    ],
-)
-optimizer2 = optim.SparseAdam(
-    [
-        {"params": model.embed.parameters(), "lr": learning_rate},
-    ],
-)
+optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+# optimizer1 = optim.Adam(
+#     [
+#         {"params": model.conv2.parameters(), "lr": learning_rate},
+#         {"params": model.conv3.parameters(), "lr": learning_rate},
+#         {"params": model.conv4.parameters(), "lr": learning_rate},
+#         {"params": model.conv5.parameters(), "lr": learning_rate},
+#         {"params": model.conv6.parameters(), "lr": learning_rate},
+#         {"params": model.mlp.parameters(), "lr": learning_rate},
+#     ],
+# )
+# optimizer2 = optim.SparseAdam(
+#     [
+#         {"params": model.embed.parameters(), "lr": learning_rate},
+#     ],
+# )
 
 if args.init_weight: model.apply(init_weights)
 
@@ -229,10 +229,12 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
-        inputs = model.char_split(words)
-        inputs = Variable(inputs).to(device) # (length x batch x char_emb_dim)
+        inputs = char_embed.char_split(words)
+        inputs = inputs.unsqueeze(1)
+        inputs = char_embed.embed(inputs).float()
+        inputs = Variable(inputs, requires_grad=True).to(device) # (length x batch x char_emb_dim)
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
-
+        # print(target.size())
         model.zero_grad()
 
         output = model.forward(inputs) # (batch x word_emb_dim)
@@ -253,12 +255,14 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         if args.run != 0:
             for tag, value in info.items():
                 logger.scalar_summary(tag, value, step)
-            
+        # gradcheck(model.forward, inputs[0].unsqueeze(0).unsqueeze(0), eps=1e-4)
         loss.backward()
-        optimizer1.step()
-        optimizer1.zero_grad()
-        optimizer2.step()
-        optimizer2.zero_grad()
+        # optimizer1.step()
+        # optimizer1.zero_grad()
+        # optimizer2.step()
+        # optimizer2.zero_grad()
+        optimizer.step()
+        optimizer.zero_grad()
 
         if it % int(dataset_size/(batch_size*5)) == 0:
             tqdm.write('loss = %.4f' % loss)
@@ -291,7 +295,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         copy_tree(logger_dir, cloud_dir+logger_dir)
         
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
-    # torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
+    torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
 
     mse_loss = 0.
     cosine_dist = 0.
