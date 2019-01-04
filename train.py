@@ -191,7 +191,7 @@ else:
     model = mimick_cnn(char_max_len=char_embed.char_max_len, char_emb_dim=char_embed.char_emb_dim, emb_dim=emb_dim, num_feature=100, random=False, asc=args.asc)
 
 model.to(device)
-criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
+criterion2 = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 
 criterion1 = nn.CosineSimilarity()
 # criterion2 = nn.L1Loss()
