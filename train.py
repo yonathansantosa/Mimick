@@ -191,10 +191,10 @@ else:
     model = mimick_cnn(char_max_len=char_embed.char_max_len, char_emb_dim=char_embed.char_emb_dim, emb_dim=emb_dim, num_feature=100, random=False, asc=args.asc)
 
 model.to(device)
-# criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
+criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 
 criterion1 = nn.CosineSimilarity()
-criterion2 = nn.L1Loss()
+# criterion2 = nn.L1Loss()
 
 if args.load:
     model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
@@ -202,8 +202,8 @@ elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
         
 word_embedding = dataset.embedding_vectors.to(device)
-# optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+# optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 # optimizer1 = optim.Adam(
 #     [
 #         {"params": model.conv2.parameters(), "lr": learning_rate},
@@ -295,7 +295,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         copy_tree(logger_dir, cloud_dir+logger_dir)
         
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
-    torch.save(char_embed.char_embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
+    torch.save(char_embed.embed.state_dict(), '%s/charembed.pth' % saved_model_path)
 
     mse_loss = 0.
     cosine_dist = 0.
@@ -312,8 +312,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         
         # cosine_dist += ((1 - F.cosine_similarity(output, target)) / ((dataset_size-split))).sum().item()
         # mse_loss += (F.mse_loss(output, target, reduction='sum') / ((dataset_size-split)*emb_dim)).item()
-        # mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
-        mse_loss += (torch.abs(output-target).sum() / ((dataset_size-split)*emb_dim)).item()
+        mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
+        # mse_loss += (torch.abs(output-target).sum() / ((dataset_size-split)*emb_dim)).item()
         
         if it < 1:
             # distance, nearest_neighbor = mse_loss(output.cpu(), word_embedding.cpu())
