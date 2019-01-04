@@ -161,7 +161,7 @@ momentum = 0.2
 
 char_embed = Char_embedding(char_emb_dim, char_max_len, random=True)
 if args.load or int(args.run) > 1:
-    char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
+    char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 emb_dim = dataset.emb_dim
