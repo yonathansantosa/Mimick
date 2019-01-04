@@ -46,10 +46,12 @@ parser.add_argument('--lr', default=0.1,
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--loss_fn', default='mse')
 parser.add_argument('--local', default=False, action='store_true',)
+parser.add_argument('--ascii', default=False, action='store_true')
 
 args = parser.parse_args()
 saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn) if args.local else '/content/gdrive/My Drive/trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
-
+if args.loss_fn == 'cosine':
+    print('true')
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -62,7 +64,7 @@ shuffle_dataset = False
 validation_split = .8
 start = int(args.epoch)
 
-char_embed = Char_embedding(char_emb_dim, max_len=char_max_len, random=True)
+char_embed = Char_embedding(char_emb_dim, max_len=char_max_len, random=True, asc=args.ascii)
 char_embed.char_embedding.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
@@ -78,6 +80,7 @@ model.eval()
 # *Evaluating
 words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'.split()
 inputs = char_embed.char_split(words)
+
 embedding = dataset.embedding_vectors.to(device)
 inputs = inputs.to(device) # (length x batch x char_emb_dim)
 output = model.forward(inputs) # (batch x word_emb_dim)

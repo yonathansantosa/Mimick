@@ -5,6 +5,19 @@ unipos/
 __pycache__/
 .vscode/
 trained_model_en_cnn/
+.vector_cache/
+train_dropout1/
+GoogleNews-vectors-negative300.bin.gz.txt
 
+mean.py
+dataset.py
+ascii_embed.py
+github
+github.pub
+join_run.py
+main_old.py
+save_char_embedding.py
+
+*.pkl
 *.pt
 *.pth

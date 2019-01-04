@@ -85,14 +85,16 @@ parser.add_argument('--charlen', default=20,
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
 parser.add_argument('--loss_fn', default='mse')
+parser.add_argument('--dropout', default=False, action='store_true')
 
 args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
-cloud_dir = '/content/gdrive/My Drive/train_without_dropout/'
-saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
-logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
+cloud_dir = '/content/gdrive/My Drive/'
+dropout_folder = 'train_dropout/' if args.dropout else 'train_without_dropout/'
+saved_model_path = dropout_folder + 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
+logger_dir = dropout_folder + '%s/logs/run%s/' % (saved_model_path, args.run)
 
 if not args.local:
     logger_dir = cloud_dir + logger_dir
