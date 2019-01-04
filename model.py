@@ -147,17 +147,7 @@ class mimick_cnn(nn.Module):
         self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim))
 
         self.mlp = nn.Sequential(
-            nn.Linear(5*num_feature, 450),
-            nn.Hardtanh(),
-            nn.Linear(450, 450),
-            nn.Hardtanh(),
-            nn.Linear(450, 450),
-            nn.Hardtanh(),
-            nn.Linear(450, 450),
-            nn.Hardtanh(),
-            nn.Linear(450, 400),
-            nn.Hardtanh(),
-            nn.Linear(400, 350),
+            nn.Linear(5*num_feature, 350),
             nn.Hardtanh(),
             nn.Linear(350, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
@@ -171,7 +161,7 @@ class mimick_cnn(nn.Module):
         x4 = F.relu(self.conv4(inputs)).squeeze(-1)
         x5 = F.relu(self.conv5(inputs)).squeeze(-1)
         x6 = F.relu(self.conv6(inputs)).squeeze(-1)
-        
+
         x2 = F.max_pool1d(x2, x2.size(2)).squeeze(-1)
         x3 = F.max_pool1d(x3, x3.size(2)).squeeze(-1)
         x4 = F.max_pool1d(x4, x4.size(2)).squeeze(-1)

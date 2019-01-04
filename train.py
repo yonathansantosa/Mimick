@@ -120,7 +120,7 @@ parser.add_argument('--bsize', default=64)
 parser.add_argument('--epoch', default=0)
 parser.add_argument('--asc', default=False, action='store_true')
 parser.add_argument('--init_weight', default=False, action='store_true')
-
+parser.add_argument('--num_feature', default=100)
 args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
@@ -188,7 +188,12 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 if args.model == 'lstm':
     model = mimick(char_emb_dim, char_embed.char_embedding, dataset.emb_dim, 128, 2)
 else:
-    model = mimick_cnn(char_max_len=char_embed.char_max_len, char_emb_dim=char_embed.char_emb_dim, emb_dim=emb_dim, num_feature=100, random=False, asc=args.asc)
+    model = mimick_cnn(
+        char_max_len=char_embed.char_max_len, 
+        char_emb_dim=char_embed.char_emb_dim, 
+        emb_dim=emb_dim, 
+        num_feature=int(args.num_feature), 
+        random=False, asc=args.asc)
 
 model.to(device)
 criterion2 = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
@@ -223,9 +228,12 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 if args.init_weight: model.apply(init_weights)
 
 step = 0
-print(model.modules())
+# print(model.modules())
 # *Training
+
 for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
+    # conv2weight = model.conv2.weight.data.clone()
+    # mlpweight = model.mlp[2].weight.data.clone()
     for it, (X, y) in enumerate(train_loader):
         alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
@@ -286,6 +294,12 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     
     torch.cuda.empty_cache()
     model.eval()
+    # conv2weight -= model.conv2.weight.data
+    # mlpweight -= model.mlp[2].weight.data
+
+    # print('mlp =', mlpweight.mean().data)
+    # print('conv2 =', conv2weight.mean().data)
+
     print()
     ############################
     # SAVING TRAINED MODEL
