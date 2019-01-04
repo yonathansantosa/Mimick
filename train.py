@@ -194,7 +194,7 @@ model.to(device)
 # criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 
 criterion1 = nn.CosineSimilarity()
-criterion2 = nn.MSELoss()
+criterion2 = nn.L1Loss()
 
 if args.load:
     model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
@@ -308,7 +308,9 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         
         # cosine_dist += ((1 - F.cosine_similarity(output, target)) / ((dataset_size-split))).sum().item()
         # mse_loss += (F.mse_loss(output, target, reduction='sum') / ((dataset_size-split)*emb_dim)).item()
-        mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
+        # mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
+        mse_loss += (torch.abs(output-target).sum() / ((dataset_size-split)*emb_dim)).item()
+        
         if it < 1:
             # distance, nearest_neighbor = mse_loss(output.cpu(), word_embedding.cpu())
             distance, nearest_neighbor = pairwise_distances(output, word_embedding)
