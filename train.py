@@ -208,7 +208,7 @@ elif not os.path.exists(saved_model_path):
         
 word_embedding = dataset.embedding_vectors.to(device)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=0.05)
+optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 # optimizer1 = optim.Adam(
 #     [
 #         {"params": model.conv2.parameters(), "lr": learning_rate},
