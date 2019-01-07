@@ -160,6 +160,7 @@ max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
 momentum = 0.2
 
+print(args.asc)
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True)
 if args.load or int(args.run) > 1:
     char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
@@ -296,6 +297,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             tqdm.write('')
     
     torch.cuda.empty_cache()
+    print(char_embed.embed.weight.size())
     model.eval()
     # conv2weight -= model.conv2.weight.data
     # mlpweight -= model.mlp[2].weight.data

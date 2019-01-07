@@ -13,7 +13,7 @@ class Char_embedding:
         '''
         self.char_max_len = char_max_len
         self.asc = asc
-        if random:
+        if random and not self.asc:
             table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
             self.weight_char = np.transpose(table[1:].astype(np.float))
             self.char = np.transpose(table[0])
@@ -26,6 +26,7 @@ class Char_embedding:
             self.weight_char = torch.from_numpy(self.weight_char)
             
             self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=True)
+            print(self.embed.weight.size())
         else:
             table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
             self.char = np.transpose(table[0])
