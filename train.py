@@ -160,7 +160,7 @@ max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
 momentum = 0.2
 
-char_embed = Char_embedding(char_emb_dim, char_max_len, random=True)
+char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True)
 if args.load or int(args.run) > 1:
     char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
