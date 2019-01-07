@@ -204,6 +204,8 @@ criterion1 = nn.CosineSimilarity()
 
 if args.load:
     model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
+    char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
+    
 elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
         
