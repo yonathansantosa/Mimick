@@ -120,6 +120,7 @@ parser.add_argument('--bsize', default=64)
 parser.add_argument('--epoch', default=0)
 parser.add_argument('--asc', default=False, action='store_true')
 parser.add_argument('--init_weight', default=False, action='store_true')
+parser.add_argument('--shuffle', default=False, action='store_true')
 parser.add_argument('--num_feature', default=100)
 args = parser.parse_args()
 
@@ -149,7 +150,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 char_emb_dim = 300
 char_max_len = int(args.charlen)
 random_seed = 64
-shuffle_dataset = False
+shuffle_dataset = args.shuffle
 validation_split = .8
 
 # *Hyperparameter/

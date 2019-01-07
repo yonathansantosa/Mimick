@@ -22,3 +22,4 @@ save_char_embedding.py
 *.pt
 *.pth
 .vector_cache/GoogleNews-vectors-negative300.bin.gz.txt
+test_function.py
