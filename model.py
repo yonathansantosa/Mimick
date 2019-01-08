@@ -146,11 +146,11 @@ class mimick_cnn(nn.Module):
         self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim))
         self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim))
 
-        self.bnorm2 = nn.BatchNorm2d(num_feature)
-        self.bnorm3 = nn.BatchNorm2d(num_feature)
-        self.bnorm4 = nn.BatchNorm2d(num_feature)
-        self.bnorm5 = nn.BatchNorm2d(num_feature)
-        self.bnorm6 = nn.BatchNorm2d(num_feature)
+        self.bnorm2 = nn.InstanceNorm2d(num_feature)
+        self.bnorm3 = nn.InstanceNorm2d(num_feature)
+        self.bnorm4 = nn.InstanceNorm2d(num_feature)
+        self.bnorm5 = nn.InstanceNorm2d(num_feature)
+        self.bnorm6 = nn.InstanceNorm2d(num_feature)
 
         self.mlp = nn.Sequential(
             nn.Linear(5*num_feature, 350),
