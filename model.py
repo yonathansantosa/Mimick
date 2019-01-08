@@ -146,6 +146,12 @@ class mimick_cnn(nn.Module):
         self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim))
         self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim))
 
+        self.bnorm2 = nn.BatchNorm2d(num_feature)
+        self.bnorm3 = nn.BatchNorm2d(num_feature)
+        self.bnorm4 = nn.BatchNorm2d(num_feature)
+        self.bnorm5 = nn.BatchNorm2d(num_feature)
+        self.bnorm6 = nn.BatchNorm2d(num_feature)
+
         self.mlp = nn.Sequential(
             nn.Linear(5*num_feature, 350),
             nn.Hardtanh(),
@@ -156,11 +162,11 @@ class mimick_cnn(nn.Module):
         )
 
     def forward(self, inputs):
-        x2 = F.relu(self.conv2(inputs)).squeeze(-1)
-        x3 = F.relu(self.conv3(inputs)).squeeze(-1)
-        x4 = F.relu(self.conv4(inputs)).squeeze(-1)
-        x5 = F.relu(self.conv5(inputs)).squeeze(-1)
-        x6 = F.relu(self.conv6(inputs)).squeeze(-1)
+        x2 = self.bnorm2(F.relu(self.conv2(inputs)).squeeze(-1))
+        x3 = self.bnorm3(F.relu(self.conv3(inputs)).squeeze(-1))
+        x4 = self.bnorm4(F.relu(self.conv4(inputs)).squeeze(-1))
+        x5 = self.bnorm5(F.relu(self.conv5(inputs)).squeeze(-1))
+        x6 = self.bnorm6(F.relu(self.conv6(inputs)).squeeze(-1))
 
         x2 = F.max_pool1d(x2, x2.size(2)).squeeze(-1)
         x3 = F.max_pool1d(x3, x3.size(2)).squeeze(-1)

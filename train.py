@@ -178,6 +178,9 @@ if shuffle_dataset:
 #* Creating PT data samplers and loaders:
 train_indices, val_indices = indices[:split], indices[split:]
 
+np.random.shuffle(train_indices)
+np.random.shuffle(val_indices)
+
 train_sampler = SubsetRandomSampler(train_indices)
 valid_sampler = SubsetRandomSampler(val_indices)
 
@@ -296,7 +299,6 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             tqdm.write('')
     
     torch.cuda.empty_cache()
-    print(char_embed.embed.weight.size())
     model.eval()
     # conv2weight -= model.conv2.weight.data
     # mlpweight -= model.mlp[2].weight.data
