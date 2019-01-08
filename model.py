@@ -162,11 +162,11 @@ class mimick_cnn(nn.Module):
         )
 
     def forward(self, inputs):
-        x2 = F.relu(self.bnorm2(self.conv2(inputs))).squeeze(-1)
-        x3 = F.relu(self.bnorm3(self.conv3(inputs))).squeeze(-1)
-        x4 = F.relu(self.bnorm4(self.conv4(inputs))).squeeze(-1)
-        x5 = F.relu(self.bnorm5(self.conv5(inputs))).squeeze(-1)
-        x6 = F.relu(self.bnorm6(self.conv6(inputs))).squeeze(-1)
+        x2 = F.tanh(self.bnorm2(self.conv2(inputs))).squeeze(-1)
+        x3 = F.tanh(self.bnorm3(self.conv3(inputs))).squeeze(-1)
+        x4 = F.tanh(self.bnorm4(self.conv4(inputs))).squeeze(-1)
+        x5 = F.tanh(self.bnorm5(self.conv5(inputs))).squeeze(-1)
+        x6 = F.tanh(self.bnorm6(self.conv6(inputs))).squeeze(-1)
 
         x2 = F.max_pool1d(x2, x2.size(2)).squeeze(-1)
         x3 = F.max_pool1d(x3, x3.size(2)).squeeze(-1)
