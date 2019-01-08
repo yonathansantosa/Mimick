@@ -112,6 +112,7 @@ parser.add_argument('--lr', default=0.1,
                     help='learning rate')
 parser.add_argument('--charlen', default=20,
                     help='maximum length')
+parser.add_argument('--charembdim', default=300)
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
 parser.add_argument('--loss_fn', default='mse')
@@ -147,7 +148,7 @@ logger_val_cosine = Logger(logger_val_cosine_dir)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # *Parameters
-char_emb_dim = 300
+char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
 random_seed = 64
 shuffle_dataset = args.shuffle
