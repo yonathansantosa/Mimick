@@ -50,8 +50,7 @@ class mimick(nn.Module):
         )
 
     def forward(self, inputs):
-        embedding = self.embed(inputs)
-        out_forw, (forw_h, c) = self.lstm(embedding)
+        out_forw, (forw_h, c) = self.lstm(inputs)
         out_cat = torch.cat([hidden for hidden in forw_h], 1)
         out = self.mlp(out_cat)
 
