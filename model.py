@@ -10,37 +10,37 @@ class mimick(nn.Module):
     def __init__(self, char_emb_dim, char_emb, emb_dim, n_h, n_hl):
         super(mimick, self).__init__()
         # self.embed = char_emb
-        self.max_len = char_max_len
-        self.asc = asc
-        if random:
-            table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
-            self.weight_char = np.transpose(table[1:].astype(np.float))
-            self.char = np.transpose(table[0])
-            self.embed = nn.Embedding(len(self.char), char_emb_dim)
-        elif self.asc:
-            table = np.transpose(np.loadtxt('ascii.embedding.txt', dtype=str, delimiter=' ', comments='##'))
-            self.char = np.transpose(table[0])
-            self.weight_char = np.transpose(table[1:].astype(np.float))
+        # self.max_len = char_max_len
+        # self.asc = asc
+        # if random:
+        #     table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
+        #     self.weight_char = np.transpose(table[1:].astype(np.float))
+        #     self.char = np.transpose(table[0])
+        #     self.embed = nn.Embedding(len(self.char), char_emb_dim)
+        # elif self.asc:
+        #     table = np.transpose(np.loadtxt('ascii.embedding.txt', dtype=str, delimiter=' ', comments='##'))
+        #     self.char = np.transpose(table[0])
+        #     self.weight_char = np.transpose(table[1:].astype(np.float))
 
-            self.weight_char = torch.from_numpy(self.weight_char)
+        #     self.weight_char = torch.from_numpy(self.weight_char)
             
-            self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=True)
-        else:
-            table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
-            self.char = np.transpose(table[0])
-            self.weight_char = np.transpose(table[1:].astype(np.float))
-            self.weight_char = self.weight_char[:,:char_emb_dim]
+        #     self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=True)
+        # else:
+        #     table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
+        #     self.char = np.transpose(table[0])
+        #     self.weight_char = np.transpose(table[1:].astype(np.float))
+        #     self.weight_char = self.weight_char[:,:char_emb_dim]
 
-            self.weight_char = torch.from_numpy(self.weight_char)
+        #     self.weight_char = torch.from_numpy(self.weight_char)
             
-            self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=False)
+        #     self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=False)
 
-        self.char2idx = {}
-        self.idx2char = {}
-        self.char_emb_dim = self.weight_char.shape[1]
-        for i, c in enumerate(self.char):
-            self.char2idx[c] = int(i)
-            self.idx2char[i] = c
+        # self.char2idx = {}
+        # self.idx2char = {}
+        # self.char_emb_dim = self.weight_char.shape[1]
+        # for i, c in enumerate(self.char):
+        #     self.char2idx[c] = int(i)
+        #     self.idx2char[i] = c
         self.lstm = nn.LSTM(char_emb_dim, n_h, n_hl, bidirectional=True, batch_first=True)
         self.mlp = nn.Sequential(
             nn.Linear(n_h*n_hl*2, 250),
