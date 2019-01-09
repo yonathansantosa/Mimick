@@ -323,7 +323,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words, dropout=float(args.dropout))
-        inputs = inputs.unsqueeze(1)
+        if args.model != 'lstm': inputs = inputs.unsqueeze(1)
         inputs = char_embed.embed(inputs).float()
         inputs = inputs.to(device) # (length x batch x char_emb_dim)
         target = target.to(device) # (batch x word_emb_dim)
