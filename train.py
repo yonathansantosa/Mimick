@@ -245,7 +245,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words)
-        inputs = inputs.unsqueeze(1)
+        if args.model != 'lstm': inputs = inputs.unsqueeze(1)
         inputs = char_embed.embed(inputs).float()
         inputs = Variable(inputs, requires_grad=True).to(device) # (length x batch x char_emb_dim)
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
