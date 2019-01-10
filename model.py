@@ -152,7 +152,7 @@ class mimick_cnn(nn.Module):
         self.bnorm6 = nn.InstanceNorm2d(num_feature)
 
         self.mlp = nn.Sequential(
-            nn.Linear(5*num_feature, 350),
+            nn.Linear(3*5*num_feature, 350),
             nn.Hardtanh(),
             nn.Linear(350, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
@@ -167,13 +167,31 @@ class mimick_cnn(nn.Module):
         x5 = F.tanh(self.conv5(inputs)).squeeze(-1)
         x6 = F.tanh(self.conv6(inputs)).squeeze(-1)
 
-        x2 = F.max_pool1d(x2, x2.size(2)).squeeze(-1)
-        x3 = F.max_pool1d(x3, x3.size(2)).squeeze(-1)
-        x4 = F.max_pool1d(x4, x4.size(2)).squeeze(-1)
-        x5 = F.max_pool1d(x5, x5.size(2)).squeeze(-1)
-        x6 = F.max_pool1d(x6, x6.size(2)).squeeze(-1)
+        x2_max = F.max_pool1d(x2, x2.size(2)).squeeze(-1)
+        x3_max = F.max_pool1d(x3, x3.size(2)).squeeze(-1)
+        x4_max = F.max_pool1d(x4, x4.size(2)).squeeze(-1)
+        x5_max = F.max_pool1d(x5, x5.size(2)).squeeze(-1)
+        x6_max = F.max_pool1d(x6, x6.size(2)).squeeze(-1)
         
-        out_cat = torch.cat([x2, x3, x4, x5, x6], dim=1)
+        maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max], dim=1)
+
+        x2_avg = F.avg_pool1d(x2, x2.size(2)).squeeze(-1)
+        x3_avg = F.avg_pool1d(x3, x3.size(2)).squeeze(-1)
+        x4_avg = F.avg_pool1d(x4, x4.size(2)).squeeze(-1)
+        x5_avg = F.avg_pool1d(x5, x5.size(2)).squeeze(-1)
+        x6_avg = F.avg_pool1d(x6, x6.size(2)).squeeze(-1)
+        
+        avgpoolcat = torch.cat([x2_avg, x3_avg, x4_avg, x5_avg, x6_avg], dim=1)
+
+        x2_min = -F.max_pool1d(-x2, x2.size(2)).squeeze(-1)
+        x3_min = -F.max_pool1d(-x3, x3.size(2)).squeeze(-1)
+        x4_min = -F.max_pool1d(-x4, x4.size(2)).squeeze(-1)
+        x5_min = -F.max_pool1d(-x5, x5.size(2)).squeeze(-1)
+        x6_min = -F.max_pool1d(-x6, x6.size(2)).squeeze(-1)
+        
+        minpoolcat = torch.cat([x2_min, x3_min, x4_min, x5_min, x6_min], dim=1)
+
+        out_cat = torch.cat([maxpoolcat, avgpoolcat, minpoolcat])
 
         out = self.mlp(out_cat)
 
