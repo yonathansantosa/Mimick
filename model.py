@@ -161,11 +161,11 @@ class mimick_cnn(nn.Module):
         )
 
     def forward(self, inputs):
-        x2 = F.tanh(self.conv2(inputs)).squeeze(-1)
-        x3 = F.tanh(self.conv3(inputs)).squeeze(-1)
-        x4 = F.tanh(self.conv4(inputs)).squeeze(-1)
-        x5 = F.tanh(self.conv5(inputs)).squeeze(-1)
-        x6 = F.tanh(self.conv6(inputs)).squeeze(-1)
+        x2 = self.conv2(inputs).squeeze(-1)
+        x3 = self.conv3(inputs).squeeze(-1)
+        x4 = self.conv4(inputs).squeeze(-1)
+        x5 = self.conv5(inputs).squeeze(-1)
+        x6 = self.conv6(inputs).squeeze(-1)
 
         x2_max = F.max_pool1d(x2, x2.size(2)).squeeze(-1)
         x3_max = F.max_pool1d(x3, x3.size(2)).squeeze(-1)
