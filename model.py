@@ -191,7 +191,7 @@ class mimick_cnn(nn.Module):
         
         minpoolcat = torch.cat([x2_min, x3_min, x4_min, x5_min, x6_min], dim=1)
 
-        out_cat = torch.cat([maxpoolcat, avgpoolcat, minpoolcat])
+        out_cat = torch.cat([maxpoolcat, avgpoolcat, minpoolcat], dim=1)
 
         out = self.mlp(out_cat)
 
