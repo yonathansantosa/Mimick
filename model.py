@@ -167,7 +167,7 @@ class mimick_cnn(nn.Module):
 
         self.t = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
-            nn.Tanh()
+            nn.ReLU()
         )
 
     def forward(self, inputs):
