@@ -154,7 +154,7 @@ class mimick_cnn(nn.Module):
         # self.bnorm6 = nn.InstanceNorm2d(num_feature)
 
         self.mlp1 = nn.Sequential(
-            nn.Linear(5*num_feature, emb_dim),
+            nn.Linear(6*num_feature, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
             # nn.Linear(400, 300),
             # nn.Hardtanh()
