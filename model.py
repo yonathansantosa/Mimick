@@ -169,8 +169,6 @@ class mimick_cnn(nn.Module):
 
         self.t = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
-            nn.ReLU(),
-            nn.Linear(emb_dim, emb_dim),
             nn.ReLU()
         )
 
