@@ -123,6 +123,8 @@ parser.add_argument('--asc', default=False, action='store_true')
 parser.add_argument('--init_weight', default=False, action='store_true')
 parser.add_argument('--shuffle', default=False, action='store_true')
 parser.add_argument('--num_feature', default=100)
+parser.add_argument('--weight_decay', default=0)
+
 args = parser.parse_args()
 
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
@@ -159,6 +161,7 @@ batch_size = int(args.bsize)
 val_batch_size = 64
 max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
+weight_decay = float(args.weight_decay)
 momentum = 0.2
 
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True)
@@ -214,7 +217,7 @@ elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
         
 word_embedding = dataset.embedding_vectors.to(device)
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 # optimizer1 = optim.Adam(
 #     [
