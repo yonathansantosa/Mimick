@@ -376,3 +376,22 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     if not args.local:
         copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
         # copy_tree(logger_val_cosine_dir, cloud_dir+logger_val_cosine_dir)
+
+for it, (X, target) in enumerate(validation_loader):
+    words = dataset.idxs2words(X)
+    inputs = char_embed.char_split(words, dropout=float(args.dropout))
+    if args.model != 'lstm': inputs = inputs.unsqueeze(1)
+    inputs = char_embed.embed(inputs).float()
+    inputs = inputs.to(device) # (length x batch x char_emb_dim)
+    target = target.to(device) # (batch x word_emb_dim)
+
+    model.zero_grad()
+
+    output = model.forward(inputs) # (batch x word_emb_dim)
+    mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
+    distance, nearest_neighbor = pairwise_distances(output, word_embedding)
+    for i, word in enumerate(X):
+        if i >= 3: break
+        loss_dist = torch.dist(output[i], target[i])
+        
+        print('%.4f | ' % loss_dist.item() + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
