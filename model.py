@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 import numpy as np
-
+import math
 
 class mimick(nn.Module):
     def __init__(self, char_emb_dim, char_emb, emb_dim, n_h, n_hl):
@@ -154,7 +154,7 @@ class mimick_cnn(nn.Module):
         # self.bnorm6 = nn.InstanceNorm2d(num_feature)
 
         self.mlp1 = nn.Sequential(
-            nn.Linear(6*num_feature, emb_dim),
+            nn.Linear(6*num_feature*48, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
             # nn.Linear(400, 300),
             # nn.Hardtanh()
@@ -181,12 +181,12 @@ class mimick_cnn(nn.Module):
         x7 = self.conv7(inputs).tanh().squeeze(-1)
 
 
-        x2_max = F.max_pool1d(x2, x2.size(2)).squeeze(-1)
-        x3_max = F.max_pool1d(x3, x3.size(2)).squeeze(-1)
-        x4_max = F.max_pool1d(x4, x4.size(2)).squeeze(-1)
-        x5_max = F.max_pool1d(x5, x5.size(2)).squeeze(-1)
-        x6_max = F.max_pool1d(x6, x6.size(2)).squeeze(-1)
-        x7_max = F.max_pool1d(x7, x7.size(2)).squeeze(-1)
+        x2_max = F.max_pool1d(x2, 2).squeeze(-1)
+        x3_max = F.max_pool1d(x3, 2).squeeze(-1)
+        x4_max = F.max_pool1d(x4, 2).squeeze(-1)
+        x5_max = F.max_pool1d(x5, 2).squeeze(-1)
+        x6_max = F.max_pool1d(x6, 2).squeeze(-1)
+        x7_max = F.max_pool1d(x7, 2).squeeze(-1)
 
         
         maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=1)
