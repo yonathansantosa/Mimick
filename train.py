@@ -207,10 +207,10 @@ else:
         random=False, asc=args.asc)
 
 model.to(device)
-criterion2 = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
+criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
 
 criterion1 = nn.CosineSimilarity()
-# criterion2 = nn.L1Loss()
+# criterion = nn.L1Loss()
 
 if args.load:
     model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
@@ -261,7 +261,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
 
         output = model.forward(inputs1) # (batch x word_emb_dim)
         # loss1 = torch.mean(1 - criterion1(output, target))
-        loss = criterion2(output, target)
+        loss = criterion(output, target) if args.loss_fn == 'mse' else criterion(output, target).mean()
         # loss = alpha*loss1 + beta*loss2
         # print(loss)
 
