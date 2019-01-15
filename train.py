@@ -250,15 +250,16 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
-        inputs = char_embed.char_split(words)
+        inputs = Variable(char_embed.char_split(words))
         if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-        inputs = char_embed.embed(inputs).float()
-        inputs = Variable(inputs, requires_grad=True).to(device) # (length x batch x char_emb_dim)
+            
+        model.zero_grad()
+        inputs1 = Variable(char_embed.embed(inputs).float(), requires_grad=True).to(device) # (length x batch x char_emb_dim)
+        inputs1.retain_grad()
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
         # print(target.size())
-        model.zero_grad()
 
-        output = model.forward(inputs) # (batch x word_emb_dim)
+        output = model.forward(inputs1) # (batch x word_emb_dim)
         # loss1 = torch.mean(1 - criterion1(output, target))
         loss = criterion2(output, target)
         # loss = alpha*loss1 + beta*loss2
@@ -277,7 +278,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             for tag, value in info.items():
                 logger.scalar_summary(tag, value, step)
         # gradcheck(model.forward, inputs[0].unsqueeze(0).unsqueeze(0), eps=1e-4)
+        
         loss.backward()
+        print('grad', inputs.grad)
+
         # optimizer1.step()
         # optimizer1.zero_grad()
         # optimizer2.step()

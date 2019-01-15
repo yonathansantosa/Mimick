@@ -154,7 +154,7 @@ class mimick_cnn(nn.Module):
         # self.bnorm6 = nn.InstanceNorm2d(num_feature)
 
         self.mlp1 = nn.Sequential(
-            nn.Linear(6*num_feature*48, emb_dim),
+            nn.Linear(num_feature*48, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
             # nn.Linear(400, 300),
             # nn.Hardtanh()
@@ -189,7 +189,7 @@ class mimick_cnn(nn.Module):
         x7_max = F.max_pool1d(x7, 2).squeeze(-1)
 
         
-        maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=1)
+        maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=2).view(inputs.size(0), -1)
 
         out_cnn = self.mlp1(maxpoolcat)
 
