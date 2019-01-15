@@ -255,7 +255,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             
         model.zero_grad()
         inputs1 = Variable(char_embed.embed(inputs).float(), requires_grad=True).to(device) # (length x batch x char_emb_dim)
-        inputs1.retain_grad()
+        # inputs1.retain_grad()
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
         # print(target.size())
 
@@ -280,7 +280,6 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # gradcheck(model.forward, inputs[0].unsqueeze(0).unsqueeze(0), eps=1e-4)
         
         loss.backward()
-        print('grad', inputs.grad)
 
         # optimizer1.step()
         # optimizer1.zero_grad()
