@@ -261,7 +261,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
 
         output = model.forward(inputs1) # (batch x word_emb_dim)
         # loss1 = torch.mean(1 - criterion1(output, target))
-        loss = criterion(output, target) if args.loss_fn == 'mse' else criterion(output, target).mean()
+        loss = criterion(output, target) if args.loss_fn == 'mse' else (1-criterion(output, target)).mean()
         # loss = alpha*loss1 + beta*loss2
         # print(loss)
 
