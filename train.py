@@ -1,3 +1,4 @@
+# python train.py --embedding=word2vec --model=cnn --maxepoch=1 --charlen=20 --lr=0.001 --bsize=64 --loss_fn=mse --dropout=0.2 --momentum=0.5 --run=1 --epoch=0 --asc --num_feature=500 --nesterov --local
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -199,10 +200,10 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 if args.model == 'lstm':
     model = mimick(char_embed.char_emb_dim, char_embed.embed, dataset.emb_dim, int(args.num_feature), 2)
 else:
-    model = mimick_cnn(
+    model = mimick_cnn2(
         char_max_len=char_embed.char_max_len, 
         char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim, 
+        emb_dim=emb_dim,
         num_feature=int(args.num_feature), 
         random=False, asc=args.asc)
 

@@ -244,3 +244,52 @@ class mimick_cnn(nn.Module):
 
     #     # return torch.unsqueeze(torch.stack(sentence), 1).permute(1, 0, 2)
     #     return torch.stack(sentence).permute(1, 0, 2)
+
+class mimick_cnn2(nn.Module):
+    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
+        super(mimick_cnn2, self).__init__()
+        self.conv1 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
+        self.conv2 = nn.Conv1d(num_feature, num_feature, 2)
+        self.conv3 = nn.Conv1d(num_feature, emb_dim, 2)
+        self.conv4 = nn.Conv1d(num_feature, emb_dim, 2)
+
+
+        self.mlp1 = nn.Sequential(
+            nn.Linear(emb_dim, emb_dim),
+            nn.Hardtanh(min_val=-3.0, max_val=3.0),
+            # nn.Linear(400, 300),
+            # nn.Hardtanh()
+        )
+
+        self.mlp2 = nn.Sequential(
+            nn.Linear(emb_dim, emb_dim),
+            nn.Hardtanh(min_val=-3.0, max_val=3.0),
+            # nn.Linear(400, 300),
+            # nn.Hardtanh()
+        )
+
+        self.t = nn.Sequential(
+            nn.Linear(emb_dim, emb_dim),
+            nn.ReLU()
+        )
+
+    def forward(self, inputs):
+        x2_conv1 = self.conv1(inputs).tanh().squeeze(-1)
+
+        x2_max1 = F.max_pool1d(x2_conv1, 2).squeeze(-1)
+        
+        x2_conv2 = self.conv2(x2_max1).tanh()
+
+        x2_max2 = F.max_pool1d(x2_conv2, 2)
+        
+        x2_conv3 = self.conv3(x2_max2).tanh()
+
+        x2_max3 = F.max_pool1d(x2_conv3, 2).squeeze(-1)
+
+        # maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=2).view(inputs.size(0), -1)
+
+        out_cnn = self.mlp1(x2_max3)
+
+        out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
+        
+        return out
