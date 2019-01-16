@@ -165,7 +165,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             tqdm.write('loss = %.4f' % loss)
     
     torch.cuda.empty_cache()
-    model.eval()
+    # model.eval()
     # conv2weight -= model.conv2.weight.data
     # mlpweight -= model.mlp[2].weight.data
 
