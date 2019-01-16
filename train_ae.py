@@ -47,11 +47,9 @@ parser.add_argument('--nesterov', default=False, action='store_true')
 parser.add_argument('--num_feature', default=100)
 parser.add_argument('--weight_decay', default=0)
 parser.add_argument('--momentum', default=0)
-parser.add_argument('--encoder', nargs='+', type=int, default='200 100')
-parser.add_argument('--decoder', nargs='+', type=int, default='100 200')
+parser.add_argument('--encoder', nargs='*', type=int, default=[200, 100])
+parser.add_argument('--decoder', nargs='*', type=int, default=[100, 200])
 parser.add_argument('--latent_dim', default=50)
-
-
 
 args = parser.parse_args()
 
@@ -111,7 +109,7 @@ train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
 validation_loader = DataLoader(dataset, batch_size=val_batch_size, sampler=valid_sampler)
 
 enc = encoder(emb_dim=emb_dim, layers=args.encoder, latent_dim=latent_dim)
-dec = encoder(emb_dim=emb_dim, layers=args.decoder, latent_dim=latent_dim)
+dec = decoder(emb_dim=emb_dim, layers=args.decoder, latent_dim=latent_dim)
 
 enc.to(device)
 dec.to(device)
@@ -127,9 +125,9 @@ elif not os.path.exists(saved_model_path):
         
 word_embedding = dataset.embedding_vectors.to(device)
 
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
+optimizer = optim.SGD(list(enc.parameters()) + list(dec.parameters()), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 
-if args.init_weight: model.apply(init_weights)
+# if args.init_weight: model.apply(init_weights)
 
 step = 0
 
@@ -137,10 +135,12 @@ step = 0
 for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
     for it, (X, y) in enumerate(train_loader):
 
-        inputs = Variable(dataset.embedding_vectors(X)).to(device)
+        inputs = Variable(y).to(device)
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
 
-        output = model.forward(inputs1) # (batch x word_emb_dim)
+        latent = enc.forward(inputs) # (batch x word_emb_dim)
+        output = dec.forward(latent)
+
         loss = criterion(output, target)
 
         # ##################
