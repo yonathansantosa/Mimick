@@ -41,7 +41,6 @@ class decoder(nn.Module):
             self.dec.add_module('tanh_%d' % (i+1), nn.Tanh())
 
         self.dec.add_module('linear_%d' % len(layers), nn.Linear(layers[-1], emb_dim))
-        self.dec.add_module('tanh_%d' % len(layers), nn.Tanh())
 
     def forward(self, inputs):
         out = self.dec(inputs)
