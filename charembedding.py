@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Char_embedding:
-    def __init__(self, char_emb_dim=300, char_max_len=15, random=False, asc=False):
+    def __init__(self, char_emb_dim=300, char_max_len=15, random=False, asc=False, device='cuda'):
         '''
         Initializing character embedding
         Parameter:
@@ -17,13 +17,13 @@ class Char_embedding:
             table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
             self.weight_char = np.transpose(table[1:].astype(np.float))
             self.char = np.transpose(table[0])
-            self.embed = nn.Embedding(len(self.char), char_emb_dim)
+            self.embed = nn.Embedding(len(self.char), char_emb_dim).to(device)
         elif self.asc:
             table = np.transpose(np.loadtxt('ascii.embedding.txt', dtype=str, delimiter=' ', comments='##'))
             self.char = np.transpose(table[0])
             self.weight_char = np.transpose(table[1:].astype(np.float))
 
-            self.weight_char = torch.from_numpy(self.weight_char)
+            self.weight_char = torch.from_numpy(self.weight_char).to(device)
             
             self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=False)
         else:
@@ -32,7 +32,7 @@ class Char_embedding:
             self.weight_char = np.transpose(table[1:].astype(np.float))
             self.weight_char = self.weight_char[:,:char_emb_dim]
 
-            self.weight_char = torch.from_numpy(self.weight_char)
+            self.weight_char = torch.from_numpy(self.weight_char).to(device)
             
             self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=False)
 

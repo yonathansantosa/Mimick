@@ -97,22 +97,14 @@ parser = argparse.ArgumentParser(
     description='Conditional Text Generation: Train Discriminator'
 )
 
-parser.add_argument('--maxepoch', default=30,
-                    help='maximum iteration (default=1000)')
-parser.add_argument('--run', default=0,
-                    help='starting epoch (default=1000)')
-parser.add_argument('--save', default=False, action='store_true',
-                    help='whether to save model or not')
-parser.add_argument('--load', default=False, action='store_true',
-                    help='whether to load model or not')
-parser.add_argument('--lang', default='en',
-                    help='choose which language for word embedding')
-parser.add_argument('--model', default='lstm',
-                    help='choose which mimick model')
-parser.add_argument('--lr', default=0.1,
-                    help='learning rate')
-parser.add_argument('--charlen', default=20,
-                    help='maximum length')
+parser.add_argument('--maxepoch', default=30, help='maximum iteration (default=1000)')
+parser.add_argument('--run', default=0, help='starting epoch (default=1000)')
+parser.add_argument('--save', default=False, action='store_true', help='whether to save model or not')
+parser.add_argument('--load', default=False, action='store_true', help='whether to load model or not')
+parser.add_argument('--lang', default='en', help='choose which language for word embedding')
+parser.add_argument('--model', default='lstm', help='choose which mimick model')
+parser.add_argument('--lr', default=0.1, help='learning rate')
+parser.add_argument('--charlen', default=20, help='maximum length')
 parser.add_argument('--charembdim', default=300)
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
@@ -168,7 +160,7 @@ learning_rate = float(args.lr)
 weight_decay = float(args.weight_decay)
 momentum = float(args.momentum)
 
-char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True)
+char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
 if args.load or int(args.run) > 1:
     char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
@@ -199,13 +191,22 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 
 if args.model == 'lstm':
     model = mimick(char_embed.char_emb_dim, char_embed.embed, dataset.emb_dim, int(args.num_feature), 2)
-else:
+elif args.model == 'cnn2':
     model = mimick_cnn2(
         char_max_len=char_embed.char_max_len, 
         char_emb_dim=char_embed.char_emb_dim, 
         emb_dim=emb_dim,
         num_feature=int(args.num_feature), 
         random=False, asc=args.asc)
+elif args.model == 'cnn':
+    model = mimick_cnn(
+        char_max_len=char_embed.char_max_len, 
+        char_emb_dim=char_embed.char_emb_dim, 
+        emb_dim=emb_dim,
+        num_feature=int(args.num_feature), 
+        random=False, asc=args.asc)
+else:
+    model = None
 
 model.to(device)
 criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
@@ -249,13 +250,12 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     # conv2weight = model.conv2.weight.data.clone()
     # mlpweight = model.mlp[2].weight.data.clone()
     for it, (X, y) in enumerate(train_loader):
+        model.zero_grad()
         alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
-        inputs = Variable(char_embed.char_split(words))
+        inputs = char_embed.char_split(words).to(device)
         if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-            
-        model.zero_grad()
-        inputs1 = Variable(char_embed.embed(inputs).float(), requires_grad=True).to(device) # (length x batch x char_emb_dim)
+        inputs1 = Variable(char_embed.embed(inputs).float(), requires_grad=True) # (length x batch x char_emb_dim)
         # inputs1.retain_grad()
         target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
         # print(target.size())
@@ -281,7 +281,6 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # gradcheck(model.forward, inputs[0].unsqueeze(0).unsqueeze(0), eps=1e-4)
         
         loss.backward()
-
         # optimizer1.step()
         # optimizer1.zero_grad()
         # optimizer2.step()
