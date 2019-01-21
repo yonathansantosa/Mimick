@@ -333,8 +333,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         words = dataset.idxs2words(X)
         inputs = char_embed.char_split(words, dropout=float(args.dropout))
         if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-        inputs = char_embed.embed(inputs).float()
-        inputs = inputs.to(device) # (length x batch x char_emb_dim)
+        inputs = char_embed.embed(inputs.to(device)).float() # (length x batch x char_emb_dim)
         target = target.to(device) # (batch x word_emb_dim)
 
         model.zero_grad()
