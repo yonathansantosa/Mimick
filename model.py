@@ -173,12 +173,12 @@ class mimick_cnn(nn.Module):
         )
 
     def forward(self, inputs):
-        x2 = self.conv2(inputs).tanh().squeeze(-1)
-        x3 = self.conv3(inputs).tanh().squeeze(-1)
-        x4 = self.conv4(inputs).tanh().squeeze(-1)
-        x5 = self.conv5(inputs).tanh().squeeze(-1)
-        x6 = self.conv6(inputs).tanh().squeeze(-1)
-        x7 = self.conv7(inputs).tanh().squeeze(-1)
+        x2 = self.conv2(inputs).relu().squeeze(-1)
+        x3 = self.conv3(inputs).relu().squeeze(-1)
+        x4 = self.conv4(inputs).relu().squeeze(-1)
+        x5 = self.conv5(inputs).relu().squeeze(-1)
+        x6 = self.conv6(inputs).relu().squeeze(-1)
+        x7 = self.conv7(inputs).relu().squeeze(-1)
 
 
         x2_max = F.max_pool1d(x2, 2).squeeze(-1)
@@ -192,9 +192,13 @@ class mimick_cnn(nn.Module):
         maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=2).view(inputs.size(0), -1)
 
         out_cnn = self.mlp1(maxpoolcat)
-
+        
         out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
         
+        for ii,tes in enumerate(self.mlp1):
+            x = tes(maxpoolcat)
+            print(x)
+
         return out
 
     # def char_split(self, sentence, dropout=0.):
@@ -251,7 +255,7 @@ class mimick_cnn2(nn.Module):
         self.conv1 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
         self.conv2 = nn.Conv1d(num_feature, num_feature, 2)
         self.conv3 = nn.Conv1d(num_feature, emb_dim, 2)
-        self.conv4 = nn.Conv1d(num_feature, emb_dim, 2)
+        self.conv4 = nn.Conv1d(emb_dim, emb_dim, 2)
 
 
         self.mlp1 = nn.Sequential(
@@ -274,15 +278,15 @@ class mimick_cnn2(nn.Module):
         )
 
     def forward(self, inputs):
-        x2_conv1 = self.conv1(inputs).tanh().squeeze(-1)
+        x2_conv1 = self.conv1(inputs).relu().squeeze(-1)
 
         x2_max1 = F.max_pool1d(x2_conv1, 2).squeeze(-1)
         
-        x2_conv2 = self.conv2(x2_max1).tanh()
+        x2_conv2 = self.conv2(x2_max1).relu()
 
         x2_max2 = F.max_pool1d(x2_conv2, 2)
         
-        x2_conv3 = self.conv3(x2_max2).tanh()
+        x2_conv3 = self.conv3(x2_max2).relu()
 
         x2_max3 = F.max_pool1d(x2_conv3, 2).squeeze(-1)
 
