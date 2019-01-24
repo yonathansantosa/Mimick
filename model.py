@@ -194,10 +194,6 @@ class mimick_cnn(nn.Module):
         out_cnn = self.mlp1(maxpoolcat)
         
         out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
-        
-        for ii,tes in enumerate(self.mlp1):
-            x = tes(maxpoolcat)
-            print(x)
 
         return out
 
