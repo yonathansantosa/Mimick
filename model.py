@@ -183,3 +183,68 @@ class mimick_cnn2(nn.Module):
         out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
         
         return out
+
+class mimick_cnn3(nn.Module):
+    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
+        super(mimick_cnn3, self).__init__()
+        self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
+        self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim))
+        self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim))
+        self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim))
+        self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim))
+        self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim))
+
+
+        # self.bnorm2 = nn.InstanceNorm2d(num_feature)
+        # self.bnorm3 = nn.InstanceNorm2d(num_feature)
+        # self.bnorm4 = nn.InstanceNorm2d(num_feature)
+        # self.bnorm5 = nn.InstanceNorm2d(num_feature)
+        # self.bnorm6 = nn.InstanceNorm2d(num_feature)
+
+        self.featloc = nn.Sequential(
+            nn.Linear(num_feature*99, emb_dim),
+            nn.Sigmoid()
+        )
+        self.mlp1 = nn.Sequential(
+            nn.Linear(emb_dim, emb_dim),
+            nn.Hardtanh(min_val=-3.0, max_val=3.0),
+            # nn.Linear(400, 300),
+            # nn.Hardtanh()
+        )
+
+        self.mlp2 = nn.Sequential(
+            nn.Linear(emb_dim, emb_dim),
+            nn.Hardtanh(min_val=-3.0, max_val=3.0),
+            # nn.Linear(400, 300),
+            # nn.Hardtanh()
+        )
+
+        self.t = nn.Sequential(
+            nn.Linear(emb_dim, emb_dim),
+            nn.ReLU()
+        )
+
+    def forward(self, inputs):
+        x2 = self.conv2(inputs).relu().squeeze(-1)
+        x3 = self.conv3(inputs).relu().squeeze(-1)
+        x4 = self.conv4(inputs).relu().squeeze(-1)
+        x5 = self.conv5(inputs).relu().squeeze(-1)
+        x6 = self.conv6(inputs).relu().squeeze(-1)
+        x7 = self.conv7(inputs).relu().squeeze(-1)
+
+        x2 = x2.view(x2.shape[0], -1)
+        x3 = x3.view(x3.shape[0], -1)
+        x4 = x4.view(x4.shape[0], -1)
+        x5 = x5.view(x5.shape[0], -1)
+        x6 = x6.view(x6.shape[0], -1)
+        x7 = x7.view(x7.shape[0], -1)
+
+        concat = torch.cat([x2,x3,x4,x5,x6,x7], dim=1)
+
+        feature_loc = self.featloc(concat)
+        
+        out_cnn = self.mlp1(feature_loc)
+        
+        out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
+
+        return out

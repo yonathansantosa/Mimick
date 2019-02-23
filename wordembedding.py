@@ -35,6 +35,7 @@ class Word_embedding:
         
         self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=True, sparse=True)
         self.emb_dim = self.embedding_vectors.size(1)
+        
     def __getitem__(self, index):
         return (torch.tensor([index], dtype=torch.long), self.word_embedding(torch.tensor([index])).squeeze())
 
