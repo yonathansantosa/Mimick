@@ -58,7 +58,7 @@ def init_weights(m):
 #         neighbor = torch.cat((neighbor, n))
 
 #     return dist, neighbor
-def pairwise_distances(x, y=None, loss=False):
+def pairwise_distances(x, y=None, multiplier=1., loss=False):
     '''
     Input: x is a Nxd matrix
            y is an optional Mxd matirx
@@ -68,6 +68,7 @@ def pairwise_distances(x, y=None, loss=False):
     '''
     x_norm = (x**2).sum(1).view(-1, 1)
     if y is not None:
+        y *= multiplier
         y_norm = (y**2).sum(1).view(1, -1)
     else:
         y = x
@@ -119,6 +120,7 @@ parser.add_argument('--nesterov', default=False, action='store_true')
 parser.add_argument('--num_feature', default=100)
 parser.add_argument('--weight_decay', default=0)
 parser.add_argument('--momentum', default=0)
+parser.add_argument('--multiplier', default=1)
 
 
 args = parser.parse_args()
@@ -159,6 +161,7 @@ max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
 weight_decay = float(args.weight_decay)
 momentum = float(args.momentum)
+multiplier = float(args.multiplier)
 
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
 if args.load or int(args.run) > 1:
@@ -258,14 +261,14 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     # mlpweight = model.mlp[2].weight.data.clone()
     for it, (X, y) in enumerate(train_loader):
         model.zero_grad()
-        alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
+        # alpha, beta = decaying_alpha_beta(epoch, args.loss_fn)
         words = dataset.idxs2words(X)
         idxs = char_embed.char_split(words).to(device)
         if args.model != 'lstm': idxs = idxs.unsqueeze(1)
         idxtoembed = char_embed.embed(idxs).float()
         inputs = Variable(idxtoembed, requires_grad=True) # (length x batch x char_emb_dim)
         # inputs.retain_grad()
-        target = Variable(y).squeeze().to(device) # (batch x word_emb_dim)
+        target = Variable(y*multiplier).squeeze().to(device) # (batch x word_emb_dim)
         # print(target.size())
 
         output = model.forward(inputs) # (batch x word_emb_dim)
@@ -311,7 +314,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             # output_test = model.forward(inputs_test) # (batch x word_emb_dim)
             # distance, nearest_neighbor = l2_dist(output[random_input].unsqueeze(0).cpu(), word_embedding.cpu())
             distance, nearest_neighbor = pairwise_distances(output[random_input].unsqueeze(0), word_embedding)
-            loss_dist = torch.dist(output[random_input], target[random_input])
+            loss_dist = torch.dist(output[random_input], target[random_input]*multiplier)
             tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
             tqdm.write('')
