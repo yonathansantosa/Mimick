@@ -185,7 +185,7 @@ class mimick_cnn2(nn.Module):
         return out
 
 class mimick_cnn3(nn.Module):
-    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
+    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, mtp=3, random=False, asc=False):
         super(mimick_cnn3, self).__init__()
         self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
         self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim))
@@ -207,14 +207,14 @@ class mimick_cnn3(nn.Module):
         )
         self.mlp1 = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
-            nn.Hardtanh(min_val=-3.0, max_val=3.0),
+            nn.Hardtanh(min_val=-mtp, max_val=mtp),
             # nn.Linear(400, 300),
             # nn.Hardtanh()
         )
 
         self.mlp2 = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
-            nn.Hardtanh(min_val=-3.0, max_val=3.0),
+            nn.Hardtanh(min_val=-mtp, max_val=mtp),
             # nn.Linear(400, 300),
             # nn.Hardtanh()
         )

@@ -213,7 +213,8 @@ elif args.model == 'cnn3':
         char_max_len=char_embed.char_max_len, 
         char_emb_dim=char_embed.char_emb_dim, 
         emb_dim=emb_dim,
-        num_feature=int(args.num_feature), 
+        num_feature=int(args.num_feature),
+        mtp=multiplier, 
         random=False, asc=args.asc)
 else:
     model = None
