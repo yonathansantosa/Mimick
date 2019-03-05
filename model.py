@@ -225,12 +225,12 @@ class mimick_cnn3(nn.Module):
         )
 
     def forward(self, inputs):
-        x2 = self.conv2(inputs).relu().squeeze(-1)
-        x3 = self.conv3(inputs).relu().squeeze(-1)
-        x4 = self.conv4(inputs).relu().squeeze(-1)
-        x5 = self.conv5(inputs).relu().squeeze(-1)
-        x6 = self.conv6(inputs).relu().squeeze(-1)
-        x7 = self.conv7(inputs).relu().squeeze(-1)
+        x2 = self.conv2(inputs).sigmoid().squeeze(-1)
+        x3 = self.conv3(inputs).sigmoid().squeeze(-1)
+        x4 = self.conv4(inputs).sigmoid().squeeze(-1)
+        x5 = self.conv5(inputs).sigmoid().squeeze(-1)
+        x6 = self.conv6(inputs).sigmoid().squeeze(-1)
+        x7 = self.conv7(inputs).sigmoid().squeeze(-1)
 
         x2 = x2.view(x2.shape[0], -1)
         x3 = x3.view(x3.shape[0], -1)
