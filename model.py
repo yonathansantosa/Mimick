@@ -207,14 +207,14 @@ class mimick_cnn3(nn.Module):
         )
         self.mlp1 = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
-            nn.Hardtanh(min_val=-mtp, max_val=mtp),
+            nn.Hardtanh(min_val=-mtp*3, max_val=mtp*3),
             # nn.Linear(400, 300),
             # nn.Hardtanh()
         )
 
         self.mlp2 = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
-            nn.Hardtanh(min_val=-mtp, max_val=mtp),
+            nn.Hardtanh(min_val=-mtp*3, max_val=mtp*3),
             # nn.Linear(400, 300),
             # nn.Hardtanh()
         )
