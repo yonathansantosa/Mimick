@@ -59,6 +59,7 @@ class Char_embedding:
 
         for word in sentence:
             c = list(word)
+            c = ['<sow>'] + c
             if len(c) > self.char_max_len:
                 # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
                 c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
