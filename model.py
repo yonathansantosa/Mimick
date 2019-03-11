@@ -187,12 +187,12 @@ class mimick_cnn2(nn.Module):
 class mimick_cnn3(nn.Module):
     def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, mtp=3, random=False, asc=False):
         super(mimick_cnn3, self).__init__()
-        self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
-        self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim))
-        self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim))
-        self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim))
-        self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim))
-        self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim))
+        self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim), bias=False)
+        self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim), bias=False)
+        self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim), bias=False)
+        self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim), bias=False)
+        self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim), bias=False)
+        self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim), bias=False)
 
 
         # self.bnorm2 = nn.InstanceNorm2d(num_feature)
@@ -225,12 +225,12 @@ class mimick_cnn3(nn.Module):
         )
 
     def forward(self, inputs):
-        x2 = self.conv2(inputs).sigmoid().squeeze(-1)
-        x3 = self.conv3(inputs).sigmoid().squeeze(-1)
-        x4 = self.conv4(inputs).sigmoid().squeeze(-1)
-        x5 = self.conv5(inputs).sigmoid().squeeze(-1)
-        x6 = self.conv6(inputs).sigmoid().squeeze(-1)
-        x7 = self.conv7(inputs).sigmoid().squeeze(-1)
+        x2 = self.conv2(inputs).squeeze(-1)
+        x3 = self.conv3(inputs).squeeze(-1)
+        x4 = self.conv4(inputs).squeeze(-1)
+        x5 = self.conv5(inputs).squeeze(-1)
+        x6 = self.conv6(inputs).squeeze(-1)
+        x7 = self.conv7(inputs).squeeze(-1)
 
         x2 = x2.view(x2.shape[0], -1)
         x3 = x3.view(x3.shape[0], -1)
