@@ -121,6 +121,7 @@ parser.add_argument('--num_feature', default=100)
 parser.add_argument('--weight_decay', default=0)
 parser.add_argument('--momentum', default=0)
 parser.add_argument('--multiplier', default=1)
+parser.add_argument('--classif', default=200)
 
 
 args = parser.parse_args()
@@ -162,6 +163,7 @@ learning_rate = float(args.lr)
 weight_decay = float(args.weight_decay)
 momentum = float(args.momentum)
 multiplier = float(args.multiplier)
+classif = float(args.classif)
 
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
 if args.load or int(args.run) > 1:
@@ -215,6 +217,14 @@ elif args.model == 'cnn3':
         emb_dim=emb_dim,
         num_feature=int(args.num_feature),
         mtp=multiplier, 
+        random=False, asc=args.asc)
+elif args.model == 'cnn4':
+    model = mimick_cnn4(
+        char_max_len=char_embed.char_max_len, 
+        char_emb_dim=char_embed.char_emb_dim, 
+        emb_dim=emb_dim,
+        num_feature=int(args.num_feature),
+        classif=classif,
         random=False, asc=args.asc)
 else:
     model = None

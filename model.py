@@ -185,7 +185,7 @@ class mimick_cnn2(nn.Module):
         return out
 
 class mimick_cnn3(nn.Module):
-    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, mtp=3, random=False, asc=False):
+    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, mtp=1, random=False, asc=False):
         super(mimick_cnn3, self).__init__()
         self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim), bias=False)
         self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim), bias=False)
@@ -246,5 +246,50 @@ class mimick_cnn3(nn.Module):
         out_cnn = self.mlp1(feature_loc)
         
         out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
+
+        return out
+
+class mimick_cnn4(nn.Module):
+    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, classif=200, random=False, asc=False):
+        super(mimick_cnn4, self).__init__()
+        self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
+        self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim))
+        self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim))
+        self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim))
+        self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim))
+        self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim))
+
+        self.classif = nn.Sequential(
+            nn.Linear(num_feature*48, classif),
+            nn.LogSoftmax()
+        )
+
+        self.regres = nn.Sequential(
+            nn.Linear(classif),
+            nn.hardtanh(min_val=-3, max_val=3)
+        )
+
+    def forward(self, inputs):
+        x2 = self.conv2(inputs).relu().squeeze(-1)
+        x3 = self.conv3(inputs).relu().squeeze(-1)
+        x4 = self.conv4(inputs).relu().squeeze(-1)
+        x5 = self.conv5(inputs).relu().squeeze(-1)
+        x6 = self.conv6(inputs).relu().squeeze(-1)
+        x7 = self.conv7(inputs).relu().squeeze(-1)
+
+
+        x2_max = F.max_pool1d(x2, 2).squeeze(-1)
+        x3_max = F.max_pool1d(x3, 2).squeeze(-1)
+        x4_max = F.max_pool1d(x4, 2).squeeze(-1)
+        x5_max = F.max_pool1d(x5, 2).squeeze(-1)
+        x6_max = F.max_pool1d(x6, 2).squeeze(-1)
+        x7_max = F.max_pool1d(x7, 2).squeeze(-1)
+
+        
+        maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=2).view(inputs.size(0), -1)
+
+        c = self.classif(maxpoolcat)
+
+        out = self.regres(c)
 
         return out
