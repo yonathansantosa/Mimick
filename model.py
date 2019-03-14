@@ -266,7 +266,7 @@ class mimick_cnn4(nn.Module):
 
         self.regres = nn.Sequential(
             nn.Linear(classif, emb_dim),
-            nn.hardtanh(min_val=-3, max_val=3)
+            nn.Hardtanh(min_val=-3, max_val=3)
         )
 
     def forward(self, inputs):
