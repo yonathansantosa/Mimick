@@ -302,7 +302,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 logger.scalar_summary(tag, value, step)
         # gradcheck(model.forward, inputs[0].unsqueeze(0).unsqueeze(0), eps=1e-4)
         
-        loss.backward()
+        loss = loss.mean(0)
+        
+        for i in range(len(loss)):
+            loss[i].backward(retain_graph=True)
         # optimizer1.step()
         # optimizer1.zero_grad()
         # optimizer2.step()
