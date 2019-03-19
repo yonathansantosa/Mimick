@@ -230,7 +230,7 @@ else:
     model = None
 
 model.to(device)
-criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
+criterion = nn.MSELoss(reduction='none') if args.loss_fn == 'mse' else nn.CosineSimilarity()
 
 criterion1 = nn.CosineSimilarity()
 # criterion = nn.L1Loss()
@@ -292,7 +292,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # Tensorboard
         # ################## 
         info = {
-            'loss-Train-%s-run%s' % (args.model, args.run) : loss.item(),
+            'loss-Train-%s-run%s' % (args.model, args.run) : loss.mean().item(),
         }
         # save_iteration(step, args.local)
 
