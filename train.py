@@ -304,8 +304,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         
         loss = loss.mean(0)
         
-        for i in range(len(loss)):
+        for i in range(len(loss)-1):
             loss[i].backward(retain_graph=True)
+
+        loss[len(loss)-1].backward()
         # optimizer1.step()
         # optimizer1.zero_grad()
         # optimizer2.step()
