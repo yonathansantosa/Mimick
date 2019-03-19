@@ -314,7 +314,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         optimizer.zero_grad()
 
         if it % int(dataset_size/(batch_size*5)) == 0:
-            tqdm.write('loss = %.4f' % loss)
+            tqdm.write('loss = %.4f' % loss.mean())
             model.eval()
             random_input = np.random.randint(len(X))
             
