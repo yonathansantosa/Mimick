@@ -36,6 +36,7 @@ class Char_embedding:
             
             self.embed = nn.Embedding.from_pretrained(self.weight_char, freeze=False)
 
+        self.embed.padding_idx = 1
         self.char2idx = {}
         self.idx2char = {}
         self.char_emb_dim = self.weight_char.shape[1]
