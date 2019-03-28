@@ -337,7 +337,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             
             words = dataset.idx2word(X[random_input]) # list of words  
 
-            distance, nearest_neighbor = pairwise_distances(output[random_input].detach().unsqueeze(0), word_embedding, neihgbor=neighbor)
+            distance, nearest_neighbor = pairwise_distances(output[random_input].detach().unsqueeze(0), word_embedding, neighbor=neighbor)
             loss_dist = torch.dist(output[random_input], target[random_input]*multiplier)
             tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
