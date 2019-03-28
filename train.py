@@ -117,6 +117,7 @@ parser.add_argument('--asc', default=False, action='store_true')
 parser.add_argument('--init_weight', default=False, action='store_true')
 parser.add_argument('--shuffle', default=False, action='store_true')
 parser.add_argument('--nesterov', default=False, action='store_true')
+parser.add_argument('--loss_reduction', default=False, action='store_true')
 parser.add_argument('--num_feature', default=100)
 parser.add_argument('--weight_decay', default=0)
 parser.add_argument('--momentum', default=0)
@@ -230,7 +231,14 @@ else:
     model = None
 
 model.to(device)
-criterion = nn.MSELoss() if args.loss_fn == 'mse' else nn.CosineSimilarity()
+
+if args.loss_fn == 'mse': 
+    if args.loss_reduction:
+        criterion = nn.MSELoss(reduction='none')
+    else:
+        criterion = nn.MSELoss()
+else:
+    criterion = nn.CosineSimilarity()
 
 criterion1 = nn.CosineSimilarity()
 # criterion = nn.L1Loss()
@@ -291,8 +299,9 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # ##################
         # Tensorboard
         # ################## 
+        loss_item = loss.item() if not args.loss_reduction else loss.mean().item()
         info = {
-            'loss-Train-%s-run%s' % (args.model, args.run) : loss.item(),
+            'loss-Train-%s-run%s' % (args.model, args.run) : loss_item,
         }
         # save_iteration(step, args.local)
 
@@ -302,13 +311,15 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 logger.scalar_summary(tag, value, step)
         # gradcheck(model.forward, inputs[0].unsqueeze(0).unsqueeze(0), eps=1e-4)
         
-        loss.backward()
-        # loss = loss.mean(0)
-        
-        # for i in range(len(loss)-1):
-        #     loss[i].backward(retain_graph=True)
+        if not args.loss_reduction:
+            loss.backward()
+        else:
+            loss = loss.mean(0)
+            for i in range(len(loss)-1):
+                loss[i].backward(retain_graph=True)
 
-        # loss[len(loss)-1].backward()
+            loss[len(loss)-1].backward()
+
         # optimizer1.step()
         # optimizer1.zero_grad()
         # optimizer2.step()
@@ -430,3 +441,5 @@ for it, (X, target) in enumerate(validation_loader):
         loss_dist = torch.dist(output[i], target[i])
         
         print('%.4f | ' % loss_dist.item() + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+            
+    if it > 20: break
