@@ -337,7 +337,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             
             words = dataset.idx2word(X[random_input]) # list of words  
 
-            distance, nearest_neighbor = pairwise_distances(output[random_input].detach().unsqueeze(0), word_embedding, neighbor)
+            distance, nearest_neighbor = pairwise_distances(output[random_input].detach().unsqueeze(0), word_embedding, neihgbor=neighbor)
             loss_dist = torch.dist(output[random_input], target[random_input]*multiplier)
             tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
             model.train()
@@ -382,7 +382,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         
         if it < 1:
             # distance, nearest_neighbor = mse_loss(output.cpu(), word_embedding.cpu())
-            distance, nearest_neighbor = pairwise_distances(output, word_embedding, neighbor)
+            distance, nearest_neighbor = pairwise_distances(output, word_embedding, neighbor=neighbor)
 
             # dist, nearest_neighbor = torch.sort(distance, descending=False)
             for i, word in enumerate(X):
@@ -431,7 +431,7 @@ for it, (X, target) in enumerate(validation_loader):
 
     output = model.forward(inputs) # (batch x word_emb_dim)
     mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
-    distance, nearest_neighbor = pairwise_distances(output, word_embedding)
+    distance, nearest_neighbor = pairwise_distances(output, word_embedding, neighbor=neighbor)
     for i, word in enumerate(X):
         if i >= 3: break
         loss_dist = torch.dist(output[i], target[i])
