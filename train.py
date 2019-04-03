@@ -438,4 +438,4 @@ for it, (X, target) in enumerate(validation_loader):
         
         print('%.4f | ' % loss_dist.item() + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
             
-    if it > 20: break
+    if it > 3: break
