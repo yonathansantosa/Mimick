@@ -5,6 +5,7 @@ import torch.nn.functional as F
 
 class Char_embedding:
     def __init__(self, char_emb_dim=300, char_max_len=15, random=False, asc=False, device='cuda'):
+        super(Char_embedding, self).__init__()
         '''
         Initializing character embedding
         Parameter:
@@ -42,7 +43,7 @@ class Char_embedding:
         self.embed.padding_idx = 1
         self.char2idx = {}
         self.idx2char = {}
-        self.char_emb_dim = self.weight_char.shape[1]
+        self.char_emb_dim = char_emb_dim
         for i, c in enumerate(self.char):
             self.char2idx[c] = int(i)
             self.idx2char[i] = c

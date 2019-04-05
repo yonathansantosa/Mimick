@@ -7,8 +7,10 @@ import numpy as np
 import math
 
 class mimick(nn.Module):
-    def __init__(self, char_emb_dim, char_emb, emb_dim, n_h, n_hl):
+    def __init__(self, embedding, char_emb_dim, char_emb, emb_dim, n_h, n_hl):
         super(mimick, self).__init__()
+        self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
+        self.embedding.weight.data.copy_(embedding.weight.data)
         self.lstm = nn.LSTM(char_emb_dim, n_h, n_hl, bidirectional=True, batch_first=True)
         self.mlp = nn.Sequential(
             nn.Linear(n_h*n_hl*2, 300),
@@ -20,15 +22,18 @@ class mimick(nn.Module):
         )
 
     def forward(self, inputs):
-        out_forw, (forw_h, c) = self.lstm(inputs)
+        x = self.embedding(inputs).float()
+        out_forw, (forw_h, c) = self.lstm(x)
         out_cat = torch.cat([hidden for hidden in forw_h], 1)
         out = self.mlp(out_cat)
 
         return out
 
 class mimick_cnn(nn.Module):
-    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
+    def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
         super(mimick_cnn, self).__init__()
+        self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
+        self.embedding.weight.data.copy_(embedding.weight.data)
         self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim), bias=False)
         self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim), bias=False)
         self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim), bias=False)
@@ -63,12 +68,13 @@ class mimick_cnn(nn.Module):
         )
 
     def forward(self, inputs):
-        x2 = self.conv2(inputs).relu().squeeze(-1)
-        x3 = self.conv3(inputs).relu().squeeze(-1)
-        x4 = self.conv4(inputs).relu().squeeze(-1)
-        x5 = self.conv5(inputs).relu().squeeze(-1)
-        x6 = self.conv6(inputs).relu().squeeze(-1)
-        x7 = self.conv7(inputs).relu().squeeze(-1)
+        x = self.embedding(inputs).float()
+        x2 = self.conv2(x).relu().squeeze(-1)
+        x3 = self.conv3(x).relu().squeeze(-1)
+        x4 = self.conv4(x).relu().squeeze(-1)
+        x5 = self.conv5(x).relu().squeeze(-1)
+        x6 = self.conv6(x).relu().squeeze(-1)
+        x7 = self.conv7(x).relu().squeeze(-1)
 
 
         x2_max = F.max_pool1d(x2, 2).squeeze(-1)
@@ -136,8 +142,10 @@ class mimick_cnn(nn.Module):
     #     return torch.stack(sentence).permute(1, 0, 2)
 
 class mimick_cnn2(nn.Module):
-    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
+    def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
         super(mimick_cnn2, self).__init__()
+        self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
+        self.embedding.weight.data.copy_(embedding.weight.data)
         self.conv1 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
         self.conv2 = nn.Conv1d(num_feature, num_feature, 2)
         self.conv3 = nn.Conv1d(num_feature, emb_dim, 2)
@@ -164,16 +172,12 @@ class mimick_cnn2(nn.Module):
         )
 
     def forward(self, inputs):
-        x2_conv1 = self.conv1(inputs).relu().squeeze(-1)
-
+        x = self.embedding(inputs).float()
+        x2_conv1 = self.conv1(x).relu().squeeze(-1)
         x2_max1 = F.max_pool1d(x2_conv1, 2).squeeze(-1)
-        
         x2_conv2 = self.conv2(x2_max1).relu()
-
         x2_max2 = F.max_pool1d(x2_conv2, 2)
-        
         x2_conv3 = self.conv3(x2_max2).relu()
-
         x2_max3 = F.max_pool1d(x2_conv3, 2).squeeze(-1)
 
         # maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=2).view(inputs.size(0), -1)
@@ -185,14 +189,16 @@ class mimick_cnn2(nn.Module):
         return out
 
 class mimick_cnn3(nn.Module):
-    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, mtp=1, random=False, asc=False):
+    def __init__(self, embedding, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, mtp=1, random=False, asc=False):
         super(mimick_cnn3, self).__init__()
-        self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim), bias=False)
-        self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim), bias=False)
-        self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim), bias=False)
-        self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim), bias=False)
-        self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim), bias=False)
-        self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim), bias=False)
+        self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
+        self.embedding.weight.data.copy_(embedding.weight.data)
+        self.conv2 = nn.Conv2d(1, num_feature, (2, embedding.embedding_dim), bias=False)
+        self.conv3 = nn.Conv2d(1, num_feature, (3, embedding.embedding_dim), bias=False)
+        self.conv4 = nn.Conv2d(1, num_feature, (4, embedding.embedding_dim), bias=False)
+        self.conv5 = nn.Conv2d(1, num_feature, (5, embedding.embedding_dim), bias=False)
+        self.conv6 = nn.Conv2d(1, num_feature, (6, embedding.embedding_dim), bias=False)
+        self.conv7 = nn.Conv2d(1, num_feature, (7, embedding.embedding_dim), bias=False)
 
 
         # self.bnorm2 = nn.InstanceNorm2d(num_feature)
@@ -225,12 +231,13 @@ class mimick_cnn3(nn.Module):
         )
 
     def forward(self, inputs):
-        x2 = self.conv2(inputs).sigmoid().squeeze(-1)
-        x3 = self.conv3(inputs).sigmoid().squeeze(-1)
-        x4 = self.conv4(inputs).sigmoid().squeeze(-1)
-        x5 = self.conv5(inputs).sigmoid().squeeze(-1)
-        x6 = self.conv6(inputs).sigmoid().squeeze(-1)
-        x7 = self.conv7(inputs).sigmoid().squeeze(-1)
+        x = self.embedding(inputs).float()
+        x2 = self.conv2(x).sigmoid().squeeze(-1)
+        x3 = self.conv3(x).sigmoid().squeeze(-1)
+        x4 = self.conv4(x).sigmoid().squeeze(-1)
+        x5 = self.conv5(x).sigmoid().squeeze(-1)
+        x6 = self.conv6(x).sigmoid().squeeze(-1)
+        x7 = self.conv7(x).sigmoid().squeeze(-1)
 
         x2 = x2.view(x2.shape[0], -1)
         x3 = x3.view(x3.shape[0], -1)
@@ -250,8 +257,10 @@ class mimick_cnn3(nn.Module):
         return out
 
 class mimick_cnn4(nn.Module):
-    def __init__(self, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, classif=200, random=False, asc=False):
+    def __init__(self, embedding, char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, classif=200, random=False, asc=False):
         super(mimick_cnn4, self).__init__()
+        self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
+        self.embedding.weight.data.copy_(embedding.weight.data)
         self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim))
         self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim))
         self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim))

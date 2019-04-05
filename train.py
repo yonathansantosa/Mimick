@@ -198,6 +198,7 @@ train_loader = DataLoader(dataset, batch_size=batch_size,
 validation_loader = DataLoader(dataset, batch_size=val_batch_size,
                                 sampler=valid_sampler)
 
+#* Initializing model
 if args.model == 'lstm':
     model = mimick(char_embed.char_emb_dim, char_embed.embed, dataset.emb_dim, int(args.num_feature), 2)
 elif args.model == 'cnn2':
@@ -216,6 +217,7 @@ elif args.model == 'cnn':
         random=False, asc=args.asc)
 elif args.model == 'cnn3':
     model = mimick_cnn3(
+        embedding=char_embed.embed,
         char_max_len=char_embed.char_max_len, 
         char_emb_dim=char_embed.char_emb_dim, 
         emb_dim=emb_dim,
@@ -287,8 +289,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         words = dataset.idxs2words(X)
         idxs = char_embed.char_split(words).to(device)
         if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-        idxtoembed = char_embed.embed(idxs).float()
-        inputs = Variable(idxtoembed, requires_grad=True) # (length x batch x char_emb_dim)
+        inputs = Variable(idxs) # (length x batch x char_emb_dim)
         # inputs.retain_grad()
         target = Variable(y*multiplier).squeeze().to(device) # (batch x word_emb_dim)
         # print(target.size())
@@ -360,15 +361,15 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         copy_tree(logger_dir, cloud_dir+logger_dir)
         
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
-    torch.save(char_embed.embed.state_dict(), '%s/charembed.pth' % saved_model_path)
+    torch.save(model.embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
 
     mse_loss = 0.
     cosine_dist = 0.
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
-        inputs = char_embed.char_split(words, dropout=float(args.dropout))
-        if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-        inputs = char_embed.embed(inputs.to(device)).float() # (length x batch x char_emb_dim)
+        idxs = char_embed.char_split(words).to(device)
+        if args.model != 'lstm': idxs = idxs.unsqueeze(1)
+        inputs = Variable(idxs) # (length x batch x char_emb_dim)
         target = target.to(device) # (batch x word_emb_dim)
 
         model.zero_grad()
@@ -380,16 +381,16 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
         # mse_loss += (torch.abs(output-target).sum() / ((dataset_size-split)*emb_dim)).item()
         
-        if it < 1:
+        # if it < 1:
             # distance, nearest_neighbor = mse_loss(output.cpu(), word_embedding.cpu())
-            distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
+            # distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
 
             # dist, nearest_neighbor = torch.sort(distance, descending=False)
-            for i, word in enumerate(X):
-                if i >= 3: break
-                loss_dist = torch.dist(output[i], target[i])
+            # for i, word in enumerate(X):
+                # if i >= 1: break
+                # loss_dist = torch.dist(output[i], target[i])
                 
-                tqdm.write('%.4f | ' % loss_dist.item() + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+                # tqdm.write('%.4f | %s \t=> %s' % (loss_dist.item(), dataset.idx2word(word), dataset.idxs2sentence(nearest_neighbor[i])))
                 # *SANITY CHECK
                 # dist_str = 'dist: '
                 # for j in dist[i]:
@@ -397,11 +398,11 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 # tqdm.write(dist_str)
     # total_val_loss = alpha*cosine_dist + beta*mse_loss
     total_val_loss = mse_loss
-    print()
+    # print()
     # print('l2 validation loss =', mse_loss)
     # print('cosine validation loss =', cosine_dist)
-    print('total loss =', total_val_loss)
-    print()
+    print('total loss = %.8f' % total_val_loss)
+    # print()
     info_val = {
         'loss-Train-%s-run%s' % (args.model, args.run) : total_val_loss
     }
@@ -422,9 +423,9 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
 
 for it, (X, target) in enumerate(validation_loader):
     words = dataset.idxs2words(X)
-    inputs = char_embed.char_split(words, dropout=float(args.dropout))
-    if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-    inputs = char_embed.embed(inputs.to(device)).float() # (length x batch x char_emb_dim)
+    idxs = char_embed.char_split(words).to(device)
+    if args.model != 'lstm': idxs = idxs.unsqueeze(1)
+    inputs = Variable(idxs) # (length x batch x char_emb_dim)
     target = target.to(device) # (batch x word_emb_dim)
 
     model.zero_grad()
