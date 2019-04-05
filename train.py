@@ -203,6 +203,7 @@ if args.model == 'lstm':
     model = mimick(char_embed.char_emb_dim, char_embed.embed, dataset.emb_dim, int(args.num_feature), 2)
 elif args.model == 'cnn2':
     model = mimick_cnn2(
+        embedding=char_embed.embed,
         char_max_len=char_embed.char_max_len, 
         char_emb_dim=char_embed.char_emb_dim, 
         emb_dim=emb_dim,
@@ -210,6 +211,7 @@ elif args.model == 'cnn2':
         random=False, asc=args.asc)
 elif args.model == 'cnn':
     model = mimick_cnn(
+        embedding=char_embed.embed,
         char_max_len=char_embed.char_max_len, 
         char_emb_dim=char_embed.char_emb_dim, 
         emb_dim=emb_dim,
@@ -226,6 +228,7 @@ elif args.model == 'cnn3':
         random=False, asc=args.asc)
 elif args.model == 'cnn4':
     model = mimick_cnn4(
+        embedding=char_embed.embed,
         char_max_len=char_embed.char_max_len, 
         char_emb_dim=char_embed.char_emb_dim, 
         emb_dim=emb_dim,
