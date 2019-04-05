@@ -330,18 +330,18 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         optimizer.step()
         optimizer.zero_grad()
 
-        if it % int(dataset_size/(batch_size*5)) == 0:
-            tqdm.write('loss = %.4f' % loss.mean())
-            model.eval()
-            random_input = np.random.randint(len(X))
+        # if it % int(dataset_size/(batch_size*5)) == 0:
+        #     tqdm.write('loss = %.4f' % loss.mean())
+        #     model.eval()
+        #     random_input = np.random.randint(len(X))
             
-            words = dataset.idx2word(X[random_input]) # list of words  
+        #     words = dataset.idx2word(X[random_input]) # list of words  
 
-            distance, nearest_neighbor = cosine_similarity(output[random_input].detach().unsqueeze(0), word_embedding, neighbor=neighbor)
-            loss_dist = torch.dist(output[random_input], target[random_input]*multiplier)
-            tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
-            model.train()
-            tqdm.write('')
+        #     distance, nearest_neighbor = cosine_similarity(output[random_input].detach().unsqueeze(0), word_embedding, neighbor=neighbor)
+        #     loss_dist = torch.dist(output[random_input], target[random_input]*multiplier)
+        #     tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
+        #     model.train()
+        #     tqdm.write('')
     
     torch.cuda.empty_cache()
     model.eval()
