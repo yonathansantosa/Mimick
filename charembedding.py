@@ -14,10 +14,13 @@ class Char_embedding:
         self.char_max_len = char_max_len
         self.asc = asc
         if random and not self.asc:
+            torch.manual_seed(5)
             table = np.transpose(np.loadtxt('glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
             self.weight_char = np.transpose(table[1:].astype(np.float))
             self.char = np.transpose(table[0])
             self.embed = nn.Embedding(len(self.char), char_emb_dim).to(device)
+            self.embed.weight[1] = torch.zeros(char_emb_dim)
+            None
         elif self.asc:
             table = np.transpose(np.loadtxt('ascii.embedding.txt', dtype=str, delimiter=' ', comments='##'))
             self.char = np.transpose(table[0])
