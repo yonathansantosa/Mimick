@@ -10,7 +10,7 @@ import math
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class mimick(nn.Module):
-    def __init__(self, embedding, char_emb_dim, char_emb, emb_dim, num_layers, hidden_size):
+    def __init__(self, embedding, char_emb_dim, char_emb, emb_dim, hidden_size):
         super(mimick, self).__init__()
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding.weight.data.copy_(embedding.weight.data)

@@ -201,7 +201,7 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 
 #* Initializing model
 if args.model == 'lstm':
-    model = mimick(char_embed.embed, char_embed.char_emb_dim, char_embed.embed, dataset.emb_dim, int(args.num_feature), 2)
+    model = mimick(char_embed.embed, char_embed.char_emb_dim, char_embed.embed, dataset.emb_dim, int(args.num_feature))
 elif args.model == 'cnn2':
     model = mimick_cnn2(
         embedding=char_embed.embed,
