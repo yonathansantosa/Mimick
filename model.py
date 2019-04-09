@@ -14,7 +14,6 @@ class mimick(nn.Module):
         super(mimick, self).__init__()
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding.weight.data.copy_(embedding.weight.data)
-        self.num_layers = num_layers
         self.hidden_size = hidden_size
         self.lstm = nn.LSTM(char_emb_dim, 1, self.hidden_size, bidirectional=True, batch_first=True)
         self.mlp = nn.Sequential(
