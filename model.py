@@ -6,14 +6,19 @@ from torch.autograd import Variable
 import numpy as np
 import math
 
+# *Device configuration
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 class mimick(nn.Module):
-    def __init__(self, embedding, char_emb_dim, char_emb, emb_dim, n_h, n_hl):
+    def __init__(self, embedding, char_emb_dim, char_emb, emb_dim, num_layers, hidden_size):
         super(mimick, self).__init__()
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding.weight.data.copy_(embedding.weight.data)
-        self.lstm = nn.LSTM(char_emb_dim, n_h, n_hl, bidirectional=True, batch_first=True)
+        self.num_layers = num_layers
+        self.hidden_size = hidden_size
+        self.lstm = nn.LSTM(char_emb_dim, 1, self.hidden_size, bidirectional=True, batch_first=True)
         self.mlp = nn.Sequential(
-            nn.Linear(n_h*n_hl*2, 300),
+            nn.Linear(self.hidden_size*2, 300),
             nn.ReLU(),
             nn.Linear(300, 300),
             nn.ReLU(),
@@ -24,7 +29,8 @@ class mimick(nn.Module):
     def forward(self, inputs):
         x = self.embedding(inputs).float()
         out_forw, (forw_h, c) = self.lstm(x)
-        out_cat = torch.cat([hidden for hidden in forw_h], 1)
+        hidden_state = forw_h.view(1, 2, x.shape[0], self.hidden_size)
+        out_cat = torch.cat([hidden_state[0, i] for i in range(2)], 1)
         out = self.mlp(out_cat)
 
         return out
