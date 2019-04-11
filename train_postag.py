@@ -172,6 +172,10 @@ model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 model.eval()
 
 postagger = Postagger(5, emb_dim, 20, len(dataset.tagset)).to(device)
+
+if args.load:
+    postagger.load_state_dict(torch.load('%s/postag.pth' % (saved_postag_path, args.model)))
+    
 optimizer = optim.SGD(postagger.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 criterion = nn.NLLLoss()
 
