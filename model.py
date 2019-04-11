@@ -15,11 +15,9 @@ class mimick(nn.Module):
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding.weight.data.copy_(embedding.weight.data)
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(char_emb_dim, 1, self.hidden_size, bidirectional=True, batch_first=True)
+        self.lstm = nn.LSTM(char_emb_dim, self.hidden_size, 1, bidirectional=True, batch_first=True)
         self.mlp = nn.Sequential(
-            nn.Linear(self.hidden_size*2, 300),
-            nn.ReLU(),
-            nn.Linear(300, 300),
+            nn.Linear(self.hidden_size, 300),
             nn.ReLU(),
             nn.Linear(300, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
@@ -27,9 +25,8 @@ class mimick(nn.Module):
 
     def forward(self, inputs):
         x = self.embedding(inputs).float()
-        out_forw, (forw_h, c) = self.lstm(x)
-        hidden_state = forw_h.view(1, 2, x.shape[0], self.hidden_size)
-        out_cat = torch.cat([hidden_state[0, i] for i in range(2)], 1)
+        _, (hidden_state, _) = self.lstm(x)
+        out_cat = (hidden_state[0, :, :] + hidden_state[1, :, :])
         out = self.mlp(out_cat)
 
         return out
@@ -46,12 +43,6 @@ class mimick_cnn(nn.Module):
         self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim), bias=False)
         self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim), bias=False)
 
-
-        # self.bnorm2 = nn.InstanceNorm2d(num_feature)
-        # self.bnorm3 = nn.InstanceNorm2d(num_feature)
-        # self.bnorm4 = nn.InstanceNorm2d(num_feature)
-        # self.bnorm5 = nn.InstanceNorm2d(num_feature)
-        # self.bnorm6 = nn.InstanceNorm2d(num_feature)
 
         self.mlp1 = nn.Sequential(
             nn.Linear(num_feature*48, emb_dim),
@@ -97,54 +88,6 @@ class mimick_cnn(nn.Module):
         out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
 
         return out
-
-    # def char_split(self, sentence, dropout=0.):
-    #     '''
-    #     Splitting character of a sentences then converting it
-    #     into list of index
-
-    #     Parameter:
-
-    #     sentence = list of words
-    #     '''
-    #     char_data = []
-    #     numbers = set(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
-    #     # split_sentence = sentence.split()
-    #     # split_sentence = sentence.split()
-
-    #     for word in sentence:
-    #         c = list(word)
-    #         if len(c) > self.max_len:
-    #             # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.max_len]]
-    #             c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.max_len]]
-    #         elif len(c) <= self.max_len:
-    #             # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
-    #             c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]                
-    #             if len(c_idx) < self.max_len: c_idx.append(self.char2idx['<eow>'])
-    #             for i in range(self.max_len-len(c)-1):
-    #                 c_idx.append(self.char2idx['<pad>'])
-    #         char_data += [c_idx]
-
-    #     char_data = torch.Tensor(char_data).long()
-    #     char_data = F.dropout(char_data, dropout)
-    #     return char_data
-
-    # def char2ix(self, c):
-    #     return self.char2idx[c]
-
-    # def ix2char(self, idx):
-    #     return self.idx2char[idx]
-
-    # def idxs2word(self, idxs):
-    #     return "".join([self.idx2char[idx] for idx in idxs])
-
-    # def get_char_vectors(self, words):
-    #     sentence = []
-    #     for idxs in words:
-    #         sentence += [self.char_embedding(idxs)]
-
-    #     # return torch.unsqueeze(torch.stack(sentence), 1).permute(1, 0, 2)
-    #     return torch.stack(sentence).permute(1, 0, 2)
 
 class mimick_cnn2(nn.Module):
     def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
@@ -204,13 +147,6 @@ class mimick_cnn3(nn.Module):
         self.conv5 = nn.Conv2d(1, num_feature, (5, embedding.embedding_dim), bias=False)
         self.conv6 = nn.Conv2d(1, num_feature, (6, embedding.embedding_dim), bias=False)
         self.conv7 = nn.Conv2d(1, num_feature, (7, embedding.embedding_dim), bias=False)
-
-
-        # self.bnorm2 = nn.InstanceNorm2d(num_feature)
-        # self.bnorm3 = nn.InstanceNorm2d(num_feature)
-        # self.bnorm4 = nn.InstanceNorm2d(num_feature)
-        # self.bnorm5 = nn.InstanceNorm2d(num_feature)
-        # self.bnorm6 = nn.InstanceNorm2d(num_feature)
 
         self.featloc = nn.Sequential(
             nn.Linear(num_feature*99, emb_dim),
