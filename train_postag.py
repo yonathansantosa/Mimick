@@ -188,10 +188,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
         if args.model == 'lstm':
-            inputs = X.view(X.shape[0]*5, X.shape[2]).to(device)
+            inputs = X.view(X.shape[0]*X.shape[1], X.shape[2]).to(device)
         else:
-            inputs = X.view(X.shape[0]*5, 1, -1).to(device)
-        w_embedding = Variable(model.forward(inputs).view(X.shape[0], 5, -1), requires_grad=True).to(device) # (batch x sent_length x word_emb_dim)
+            inputs = X.view(X.shape[0]*X.shape[1], 1, -1).to(device)
+        w_embedding = Variable(model.forward(inputs).view(X.shape[0], X.shape[1], -1), requires_grad=True).to(device) # (batch x sent_length x word_emb_dim)
         target = Variable(y).to(device)
         output = postagger.forward(w_embedding).permute(0, 2, 1)
 
@@ -225,7 +225,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     validation_loss = 0.
 
     for it, (X, y) in enumerate(validation_loader):
-        inputs = X.view(X.shape[0]*5, 1, -1).to(device)
+        if args.model == 'lstm':
+            inputs = X.view(X.shape[0]*X.shape[1], X.shape[2]).to(device)
+        else:
+            inputs = X.view(X.shape[0]*X.shape[1], 1, -1).to(device)
         w_embedding = Variable(model.forward(inputs).view(X.shape[0], 5, -1), requires_grad=True).to(device) # (batch x sent_length x word_emb_dim)
         target = Variable(y).to(device)
         output = postagger.forward(w_embedding).permute(0, 2, 1)
