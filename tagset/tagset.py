@@ -24,8 +24,8 @@ class Tagset:
     def __len__(self):
         return len(self.idx2tags)
         
-    def idx2tag(self, id):
-        return self.idx2tags[id]
+    def idx2tag(self, idx):
+        return self.idx2tags[idx]
 
     def tag2idx(self, tag):
         return self.tags2idx[tag]

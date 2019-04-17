@@ -229,11 +229,19 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             inputs = X.view(X.shape[0]*X.shape[1], X.shape[2]).to(device)
         else:
             inputs = X.view(X.shape[0]*X.shape[1], 1, -1).to(device)
-        w_embedding = Variable(model.forward(inputs).view(X.shape[0], 5, -1), requires_grad=True).to(device) # (batch x sent_length x word_emb_dim)
+        w_embedding = Variable(model.forward(inputs).view(X.shape[0], 5, -1), requires_grad=False).to(device) # (batch x sent_length x word_emb_dim)
         target = Variable(y).to(device)
         output = postagger.forward(w_embedding).permute(0, 2, 1)
         validation_loss += criterion(output, target)*X.shape[0]/len(val_indices)
-    
+        if not args.quiet:
+            if it == 0:
+                for i in range(len(X[0])):
+                    word_idx = X[0][i].numpy()
+                    word = char_embed.clean_idxs2word(word_idx)
+                    tag = dataset.tagset.idx2tag(int(torch.argmax(torch.exp(output[0][i])).cpu()))
+                    tgt = dataset.tagset.idx2tag(int(y[0][i]))
+                    tqdm.write('(%s, %s) => %s' % (word, tgt, tag))
+
     info_val = {
         'loss-Train-%s-postag-run%s' % (args.model, args.run) : validation_loss
     }
@@ -245,3 +253,14 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     if not args.quiet: tqdm.write('val_loss %.4f ' % validation_loss)
     
     postagger.train()
+
+postagger.eval()
+
+for it, (X, y) in enumerate(validation_loader):
+    for i in range(len(X[0])):
+        word_idx = X[0][i].numpy()
+        word = char_embed.clean_idxs2word(word_idx)
+        tag = dataset.tagset.idx2tag(int(torch.argmax(torch.exp(output[0][i])).cpu()))
+        tgt = dataset.tagset.idx2tag(int(y[0][i]))
+        tqdm.write('(%s, %s) => %s' % (word, tgt, tag))
+    if it > 3: break
