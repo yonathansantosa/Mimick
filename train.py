@@ -388,7 +388,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         
         if not args.quiet:
             if it < 1:
-                distance, nearest_neighbor = mse_loss(output.cpu(), word_embedding.cpu())
+                # distance, nearest_neighbor = pairwise_distances(output.cpu(), word_embedding.cpu())
                 distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
 
                 dist, nearest_neighbor = torch.sort(distance, descending=False)
