@@ -45,7 +45,7 @@ class mimick_cnn(nn.Module):
 
 
         self.mlp1 = nn.Sequential(
-            nn.Linear(num_feature*48, emb_dim),
+            nn.Linear(num_feature*6, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
             # nn.Linear(400, 300),
             # nn.Hardtanh()
@@ -73,15 +73,15 @@ class mimick_cnn(nn.Module):
         x7 = self.conv7(x).relu().squeeze(-1)
 
 
-        x2_max = F.max_pool1d(x2, 2).squeeze(-1)
-        x3_max = F.max_pool1d(x3, 2).squeeze(-1)
-        x4_max = F.max_pool1d(x4, 2).squeeze(-1)
-        x5_max = F.max_pool1d(x5, 2).squeeze(-1)
-        x6_max = F.max_pool1d(x6, 2).squeeze(-1)
-        x7_max = F.max_pool1d(x7, 2).squeeze(-1)
+        x2_max = F.max_pool1d(x2, x2.shape[2]).squeeze(-1)
+        x3_max = F.max_pool1d(x3, x3.shape[2]).squeeze(-1)
+        x4_max = F.max_pool1d(x4, x4.shape[2]).squeeze(-1)
+        x5_max = F.max_pool1d(x5, x5.shape[2]).squeeze(-1)
+        x6_max = F.max_pool1d(x6, x6.shape[2]).squeeze(-1)
+        x7_max = F.max_pool1d(x7, x7.shape[2]).squeeze(-1)
 
         
-        maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=2).view(inputs.size(0), -1)
+        maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=1)
 
         out_cnn = self.mlp1(maxpoolcat)
         
