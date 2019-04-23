@@ -33,7 +33,7 @@ def cosine_similarity(tensor1, tensor2, neighbor=5):
 
     # result = (tensor1_dot_tensor2/divisor).data.cpu().numpy()
     result = (tensor1_dot_tensor2/divisor.clamp(min=1.e-09)).data.cpu()
-    d, n = torch.sort(result, descending=False)
+    d, n = torch.sort(result, descending=True)
     n = n[:, :neighbor]
     d = d[:, :neighbor]
     return d, n
@@ -328,7 +328,6 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 words = dataset.idx2word(X[random_input]) # list of words  
 
                 distance, nearest_neighbor = cosine_similarity(output[random_input].detach().unsqueeze(0), word_embedding, neighbor=neighbor)
-                dist, nearest_neighbor = torch.sort(distance, descending=True)
                 
                 loss_dist = torch.dist(output[random_input], target[random_input]*multiplier)
                 tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
@@ -376,8 +375,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             if it < 1:
                 # distance, nearest_neighbor = pairwise_distances(output.cpu(), word_embedding.cpu())
                 distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
-
-                dist, nearest_neighbor = torch.sort(distance, descending=True)
+                
                 for i, word in enumerate(X):
                     if i >= 1: break
                     loss_dist = torch.dist(output[i], target[i])
