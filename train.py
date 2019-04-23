@@ -171,8 +171,8 @@ multiplier = float(args.multiplier)
 classif = int(args.classif)
 
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
-if args.load or int(args.run) > 1:
-    char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
+# if args.load or int(args.run) > 1:
+#     char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 emb_dim = dataset.emb_dim
@@ -254,29 +254,13 @@ criterion1 = nn.CosineSimilarity()
 
 if args.load:
     model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
-    char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
+    # char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
     
 elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
         
 word_embedding = dataset.embedding_vectors.to(device)
-# optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
-# optimizer1 = optim.Adam(
-#     [
-#         {"params": model.conv2.parameters(), "lr": learning_rate},
-#         {"params": model.conv3.parameters(), "lr": learning_rate},
-#         {"params": model.conv4.parameters(), "lr": learning_rate},
-#         {"params": model.conv5.parameters(), "lr": learning_rate},
-#         {"params": model.conv6.parameters(), "lr": learning_rate},
-#         {"params": model.mlp.parameters(), "lr": learning_rate},
-#     ],
-# )
-# optimizer2 = optim.SparseAdam(
-#     [
-#         {"params": model.embed.parameters(), "lr": learning_rate},
-#     ],
-# )
 
 if args.init_weight: model.apply(init_weights)
 
@@ -344,6 +328,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 words = dataset.idx2word(X[random_input]) # list of words  
 
                 distance, nearest_neighbor = cosine_similarity(output[random_input].detach().unsqueeze(0), word_embedding, neighbor=neighbor)
+                dist, nearest_neighbor = torch.sort(distance, descending=True)
+                
                 loss_dist = torch.dist(output[random_input], target[random_input]*multiplier)
                 tqdm.write('%d %.4f | ' % (step, loss_dist.item()) + words + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[0]))
                 model.train()
@@ -366,7 +352,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         copy_tree(logger_dir, cloud_dir+logger_dir)
         
     torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
-    torch.save(model.embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
+    # torch.save(model.embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
 
     mse_loss = 0.
     cosine_dist = 0.
@@ -391,7 +377,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 # distance, nearest_neighbor = pairwise_distances(output.cpu(), word_embedding.cpu())
                 distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
 
-                dist, nearest_neighbor = torch.sort(distance, descending=False)
+                dist, nearest_neighbor = torch.sort(distance, descending=True)
                 for i, word in enumerate(X):
                     if i >= 1: break
                     loss_dist = torch.dist(output[i], target[i])
