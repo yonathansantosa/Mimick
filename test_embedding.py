@@ -46,20 +46,11 @@ parser = argparse.ArgumentParser(
     description='Conditional Text Generation: Train Discriminator'
 )
 
-parser.add_argument('--maxepoch', default=30,
-                    help='maximum iteration (default=1000)')
-parser.add_argument('--epoch', default=0,
-                    help='starting epoch (default=1000)')
-parser.add_argument('--save', default=False, action='store_true',
-                    help='whether to save model or not')
-parser.add_argument('--load', default=False, action='store_true',
-                    help='whether to load model or not')
 parser.add_argument('--lang', default='en',
                     help='choose which language for word embedding')
 parser.add_argument('--model', default='lstm',
                     help='choose which mimick model')
-parser.add_argument('--lr', default=0.1,
-                    help='learning rate')
+parser.add_argument('--multiplier', default=1)
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--loss_fn', default='mse')
 parser.add_argument('--classif', default=200)
@@ -71,6 +62,7 @@ cloud_dir = '/content/gdrive/My Drive/train_dropout/'
 saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
 
 classif = int(args.classif)
+multiplier = int(args.multiplier)
 
 if not args.local:
     # logger_dir = cloud_dir + logger_dir
