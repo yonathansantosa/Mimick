@@ -22,7 +22,20 @@ from distutils.dir_util import copy_tree
 import pickle
 
 def cosine_similarity(tensor1, tensor2, neighbor=5):
-    # tensor2 += 1.e-15
+    '''
+    Calculating cosine similarity for each vector elements of
+    tensor 1 with each vector elements of tensor 2
+
+    Input:
+
+    tensor1 = (torch.FloatTensor) with size N x D
+    tensor2 = (torch.FloatTensor) with size M x D
+    neighbor = (int) number of closest vector to be returned
+
+    Output:
+
+    (distance, neighbor)
+    '''
     tensor1_norm = torch.norm(tensor1, 2, 1)
     tensor2_norm = torch.norm(tensor2, 2, 1)
     tensor1_dot_tensor2 = torch.mm(tensor2, torch.t(tensor1)).t()
@@ -60,10 +73,16 @@ def init_weights(m):
 #     return dist, neighbor
 def pairwise_distances(x, y=None, multiplier=1., loss=False, neighbor=5):
     '''
-    Input: x is a Nxd matrix
-           y is an optional Mxd matirx
-    Output: dist is a NxM matrix where dist[i,j] is the square norm between x[i,:] and y[j,:]
-            if y is not given then use 'y=x'.
+    Input: 
+    
+    x is a Nxd matrix
+    y is an optional Mxd matirx
+
+    Output: 
+    
+    dist is a NxM matrix where dist[i,j] is the square norm between x[i,:] and y[j,:]
+    if y is not given then use 'y=x'.
+
     i.e. dist[i,j] = ||x[i,:]-y[j,:]||^2
     '''
     x_norm = (x**2).sum(1).view(-1, 1)
@@ -99,7 +118,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('--maxepoch', default=30, help='maximum iteration (default=1000)')
-parser.add_argument('--run', default=0, help='starting epoch (default=1000)')
+parser.add_argument('--run', default=0, help='starting epoch (default=0)')
 parser.add_argument('--save', default=False, action='store_true', help='whether to save model or not')
 parser.add_argument('--load', default=False, action='store_true', help='whether to load model or not')
 parser.add_argument('--lang', default='en', help='choose which language for word embedding')
@@ -153,6 +172,7 @@ logger_val_cosine = Logger(logger_val_cosine_dir)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # *Parameters
+run = int(args.run)
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
 random_seed = 64
@@ -250,7 +270,12 @@ else:
     criterion = nn.CosineSimilarity()
 
 criterion1 = nn.CosineSimilarity()
-# criterion = nn.L1Loss()
+
+if run < 1:
+    args.run = '1'
+
+if run != 1:
+    args.load = True
 
 if args.load:
     model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
@@ -298,7 +323,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # save_iteration(step, args.local)
 
         step += 1
-        if args.run != 0:
+        if run != 1:
             for tag, value in info.items():
                 logger.scalar_summary(tag, value, step)
         # gradcheck(model.forward, inputs[0].unsqueeze(0).unsqueeze(0), eps=1e-4)
@@ -400,7 +425,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     #     'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
     # }
 
-    if args.run != 0:
+    if run != 1:
         for tag, value in info_val.items():
             logger_val.scalar_summary(tag, value, step)
         # for tag, value in info_cosine_val.items():
