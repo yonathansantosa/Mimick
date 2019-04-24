@@ -58,6 +58,7 @@ parser.add_argument('--momentum', default=0)
 parser.add_argument('--multiplier', default=1)
 parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
+parser.add_argument('--seq_len', default=5)
 
 args = parser.parse_args()
 
@@ -86,7 +87,7 @@ random_seed = 64
 shuffle_dataset = args.shuffle
 validation_split = .8
 neighbor = int(args.neighbor)
-seq_len = 5
+seq_len = int(args.seq_len)
 
 # *Hyperparameter
 batch_size = int(args.bsize)
@@ -189,10 +190,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
         if args.model == 'lstm':
-            inputs = X.view(X.shape[0]*X.shape[1], X.shape[2]).to(device)
+            inputs = X.view(X.shape[0]*seq_len, X.shape[2]).to(device)
         else:
-            inputs = X.view(X.shape[0]*X.shape[1], 1, -1).to(device)
-        w_embedding = Variable(model.forward(inputs).view(X.shape[0], X.shape[1], -1), requires_grad=True).to(device) # (batch x sent_length x word_emb_dim)
+            inputs = X.view(X.shape[0]*seq_len, 1, -1).to(device)
+        w_embedding = Variable(model.forward(inputs).view(X.shape[0], seq_len, -1), requires_grad=True).to(device) # (batch x sent_length x word_emb_dim)
         target = Variable(y).to(device)
         output = postagger.forward(w_embedding).permute(0, 2, 1)
 
@@ -227,16 +228,16 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     accuracy = 0.
     for it, (X, y) in enumerate(validation_loader):
         if args.model == 'lstm':
-            inputs = X.view(X.shape[0]*X.shape[1], X.shape[2]).to(device)
+            inputs = X.view(X.shape[0]*seq_len, X.shape[2]).to(device)
         else:
-            inputs = X.view(X.shape[0]*X.shape[1], 1, -1).to(device)
-        w_embedding = Variable(model.forward(inputs).view(X.shape[0], 5, -1), requires_grad=False).to(device) # (batch x sent_length x word_emb_dim)
+            inputs = X.view(X.shape[0]*seq_len, 1, -1).to(device)
+        w_embedding = Variable(model.forward(inputs).view(X.shape[0], seq_len, -1), requires_grad=False).to(device) # (batch x sent_length x word_emb_dim)
         target = Variable(y).to(device)
         output = postagger.forward(w_embedding).permute(0, 2, 1)
         output_tag = torch.argmax(output, dim=1)
         correct = (output_tag == target).sum()/len(val_indices)
         accuracy += correct
-        validation_loss += criterion(output, target)*X.shape[0]/len(val_indices)
+        validation_loss += criterion(output, target)*X.shape[0]/(len(val_indices)*seq_len)
         if not args.quiet:
             if it == 0:
                 tag = torch.argmax(output[0], dim=0)
@@ -265,14 +266,14 @@ postagger.eval()
 accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):
     if args.model == 'lstm':
-        inputs = X.view(X.shape[0]*X.shape[1], X.shape[2]).to(device)
+        inputs = X.view(X.shape[0]*seq_len, X.shape[2]).to(device)
     else:
-        inputs = X.view(X.shape[0]*X.shape[1], 1, -1).to(device)
+        inputs = X.view(X.shape[0]*seq_len, 1, -1).to(device)
     w_embedding = Variable(model.forward(inputs).view(X.shape[0], 5, -1), requires_grad=False).to(device) # (batch x sent_length x word_emb_dim)
     target = Variable(y).to(device)
     output = postagger.forward(w_embedding).permute(0, 2, 1)
     output_tag = torch.argmax(output, dim=1)
-    correct = float((output_tag == target).sum())/len(val_indices)
+    correct = float((output_tag == target).sum())/(len(val_indices)*seq_len)
     accuracy += correct
     if it <= 3:
         tag = torch.argmax(output[0], dim=0)
@@ -282,6 +283,6 @@ for it, (X, y) in enumerate(validation_loader):
             tg = dataset.tagset.idx2tag(int(tag[i].cpu()))
             tgt = dataset.tagset.idx2tag(int(y[0][i]))
             tqdm.write('(%s, %s) => %s' % (word, tgt, tg))
-
+        tqdm.write('\n \n')
 print('accuracy = %.4f' % accuracy)
     
