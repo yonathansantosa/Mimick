@@ -59,6 +59,8 @@ parser.add_argument('--asc', default=False, action='store_true')
 parser.add_argument('--charlen', default=20, help='maximum length')
 parser.add_argument('--charembdim', default=300)
 parser.add_argument('--neighbor', default=5)
+parser.add_argument('--num_feature', default=50)
+
 
 
 args = parser.parse_args()
