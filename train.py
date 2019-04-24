@@ -118,7 +118,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('--maxepoch', default=30, help='maximum iteration (default=1000)')
-parser.add_argument('--run', default=0, help='starting epoch (default=0)')
+parser.add_argument('--run', default=1, help='starting epoch (default=1)')
 parser.add_argument('--save', default=False, action='store_true', help='whether to save model or not')
 parser.add_argument('--load', default=False, action='store_true', help='whether to load model or not')
 parser.add_argument('--lang', default='en', help='choose which language for word embedding')

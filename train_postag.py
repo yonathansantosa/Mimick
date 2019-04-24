@@ -86,6 +86,7 @@ random_seed = 64
 shuffle_dataset = args.shuffle
 validation_split = .8
 neighbor = int(args.neighbor)
+seq_len = 5
 
 # *Hyperparameter
 batch_size = int(args.bsize)
@@ -171,7 +172,7 @@ model.to(device)
 model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 model.eval()
 
-postagger = Postagger(5, emb_dim, 20, len(dataset.tagset)).to(device)
+postagger = Postagger(seq_len, emb_dim, 20, len(dataset.tagset)).to(device)
 
 if args.load:
     postagger.load_state_dict(torch.load('%s/postag.pth' % (saved_postag_path)))
@@ -232,18 +233,19 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         w_embedding = Variable(model.forward(inputs).view(X.shape[0], 5, -1), requires_grad=False).to(device) # (batch x sent_length x word_emb_dim)
         target = Variable(y).to(device)
         output = postagger.forward(w_embedding).permute(0, 2, 1)
-        output_tag = torch.argmax(torch.exp(output), dim=1)
+        output_tag = torch.argmax(output, dim=1)
         correct = (output_tag == target).sum()/len(val_indices)
         accuracy += correct
         validation_loss += criterion(output, target)*X.shape[0]/len(val_indices)
         if not args.quiet:
             if it == 0:
+                tag = torch.argmax(output[0], dim=0)
                 for i in range(len(X[0])):
                     word_idx = X[0][i].numpy()
                     word = char_embed.clean_idxs2word(word_idx)
-                    tag = dataset.tagset.idx2tag(int(torch.argmax(torch.exp(output[0][i])).cpu()))
+                    tg = dataset.tagset.idx2tag(int(tag[i].cpu()))
                     tgt = dataset.tagset.idx2tag(int(y[0][i]))
-                    tqdm.write('(%s, %s) => %s' % (word, tgt, tag))
+                    tqdm.write('(%s, %s) => %s' % (word, tgt, tg))
     if not args.quiet: tqdm.write('accuracy = %.4f' % accuracy)
 
     info_val = {
@@ -269,16 +271,17 @@ for it, (X, y) in enumerate(validation_loader):
     w_embedding = Variable(model.forward(inputs).view(X.shape[0], 5, -1), requires_grad=False).to(device) # (batch x sent_length x word_emb_dim)
     target = Variable(y).to(device)
     output = postagger.forward(w_embedding).permute(0, 2, 1)
-    output_tag = torch.argmax(torch.exp(output), dim=1)
+    output_tag = torch.argmax(output, dim=1)
     correct = (output_tag == target).sum()/len(val_indices)
     accuracy += correct
     if it <= 3:
+        tag = torch.argmax(output[0], dim=0)
         for i in range(len(X[0])):
             word_idx = X[0][i].numpy()
             word = char_embed.clean_idxs2word(word_idx)
-            tag = dataset.tagset.idx2tag(int(torch.argmax(torch.exp(output[0][i])).cpu()))
+            tg = dataset.tagset.idx2tag(int(tag[i].cpu()))
             tgt = dataset.tagset.idx2tag(int(y[0][i]))
-            tqdm.write('(%s, %s) => %s' % (word, tgt, tag))
+            tqdm.write('(%s, %s) => %s' % (word, tgt, tg))
 
 print('accuracy = %.4f' % accuracy)
     
