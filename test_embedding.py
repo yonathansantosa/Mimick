@@ -60,6 +60,7 @@ parser.add_argument('--charlen', default=20, help='maximum length')
 parser.add_argument('--charembdim', default=300)
 parser.add_argument('--neighbor', default=5)
 parser.add_argument('--num_feature', default=50)
+parser.add_argument('--words', nargs='+')
 
 
 
@@ -138,6 +139,8 @@ model.eval()
 
 # *Evaluating
 words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'.split()
+words += args.words
+
 inputs = char_embed.char_split(words)
 
 embedding = dataset.embedding_vectors.to(device)
