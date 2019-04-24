@@ -142,6 +142,7 @@ inputs = char_embed.char_split(words)
 
 embedding = dataset.embedding_vectors.to(device)
 inputs = inputs.to(device) # (length x batch x char_emb_dim)
+if args.model != 'lstm': inputs = inputs.unsqueeze(1)
 output = model.forward(inputs) # (batch x word_emb_dim)
 
 cos_dist, nearest_neighbor = cosine_similarity(output, embedding, neighbor)
