@@ -272,7 +272,7 @@ for it, (X, y) in enumerate(validation_loader):
     target = Variable(y).to(device)
     output = postagger.forward(w_embedding).permute(0, 2, 1)
     output_tag = torch.argmax(output, dim=1)
-    correct = (output_tag == target).sum()/len(val_indices)
+    correct = float((output_tag == target).sum())/len(val_indices)
     accuracy += correct
     if it <= 3:
         tag = torch.argmax(output[0], dim=0)
