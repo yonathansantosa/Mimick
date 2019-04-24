@@ -100,7 +100,7 @@ multiplier = float(args.multiplier)
 classif = int(args.classif)
 
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
-char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
+# char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 char_embed.embed.eval()
 dataset = Postag(char_embed)
 
@@ -283,6 +283,6 @@ for it, (X, y) in enumerate(validation_loader):
             tg = dataset.tagset.idx2tag(int(tag[i].cpu()))
             tgt = dataset.tagset.idx2tag(int(y[0][i]))
             tqdm.write('(%s, %s) => %s' % (word, tgt, tg))
-        tqdm.write('\n \n')
+        tqdm.write('\n')
 print('accuracy = %.4f' % accuracy)
     
