@@ -56,6 +56,10 @@ parser.add_argument('--loss_fn', default='mse')
 parser.add_argument('--classif', default=200)
 parser.add_argument('--local', default=False, action='store_true',)
 parser.add_argument('--asc', default=False, action='store_true')
+parser.add_argument('--charlen', default=20, help='maximum length')
+parser.add_argument('--charembdim', default=300)
+parser.add_argument('--neighbor', default=5)
+
 
 args = parser.parse_args()
 cloud_dir = '/content/gdrive/My Drive/train_dropout/'
@@ -74,13 +78,9 @@ if args.loss_fn == 'cosine':
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # *Parameters
-char_emb_dim = 300
-char_max_len = 20
-word_emb_dim = 64
-random_seed = 64
-shuffle_dataset = False
-validation_split = .8
-start = int(args.epoch)
+char_emb_dim = int(args.charembdim)
+char_max_len = int(args.charlen)
+neighbor = int(args.neighbor)
 
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
 # char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
@@ -142,7 +142,7 @@ embedding = dataset.embedding_vectors.to(device)
 inputs = inputs.to(device) # (length x batch x char_emb_dim)
 output = model.forward(inputs) # (batch x word_emb_dim)
 
-cos_dist, nearest_neighbor = cosine_similarity(output, embedding)
+cos_dist, nearest_neighbor = cosine_similarity(output, embedding, neighbor)
 
 for i, word in enumerate(words):
     print('%.4f | ' % torch.mean(cos_dist[i]) + word + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
