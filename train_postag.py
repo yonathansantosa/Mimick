@@ -1,7 +1,7 @@
 import nltk
 import numpy as np
 from nltk.corpus import brown
-from tagset.tagset import Postag, Postagger
+from tagset.tagset import Postag, Postagger, Postagger_adaptive
 
 import torch
 import torch.nn as nn
@@ -101,7 +101,7 @@ classif = int(args.classif)
 
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
 # char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
-char_embed.embed.eval()
+# char_embed.embed.eval()
 dataset = Postag(char_embed)
 
 dataset_size = len(dataset)
@@ -173,7 +173,8 @@ model.to(device)
 model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 model.eval()
 
-postagger = Postagger(seq_len, emb_dim, 20, len(dataset.tagset)).to(device)
+postagger = Postagger_adaptive(seq_len, emb_dim, 20, len(dataset.tagset)).to(device)
+# postagger = Postagger(seq_len, emb_dim, 20, len(dataset.tagset)).to(device)
 
 if args.load:
     postagger.load_state_dict(torch.load('%s/postag.pth' % (saved_postag_path)))
@@ -195,9 +196,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             inputs = X.view(X.shape[0]*seq_len, 1, -1).to(device)
         w_embedding = Variable(model.forward(inputs).view(X.shape[0], seq_len, -1), requires_grad=True).to(device) # (batch x sent_length x word_emb_dim)
         target = Variable(y).to(device)
-        output = postagger.forward(w_embedding).permute(0, 2, 1)
+        # output = postagger.forward(w_embedding, target).permute(0, 2, 1)
+        output, loss = postagger.forward(w_embedding, target)
 
-        loss = criterion(output, target)
+        # loss = criterion(output, target)
         
         # ##################
         # Tensorboard
@@ -233,14 +235,17 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             inputs = X.view(X.shape[0]*seq_len, 1, -1).to(device)
         w_embedding = Variable(model.forward(inputs).view(X.shape[0], seq_len, -1), requires_grad=False).to(device) # (batch x sent_length x word_emb_dim)
         target = Variable(y).to(device)
-        output = postagger.forward(w_embedding).permute(0, 2, 1)
-        output_tag = torch.argmax(output, dim=1)
-        correct = (output_tag == target).sum()/len(val_indices)
+        # output = postagger.forward(w_embedding).permute(0, 2, 1)
+        output, validation_loss = postagger.validation(w_embedding, target)
+        # output_tag = postagger.predict(output.view(X.shape[0], seq_len))
+        output_tag = output.view(X.shape[0], seq_len)
+        correct = (output_tag == target).sum()/(len(val_indices)*seq_len)
         accuracy += correct
-        validation_loss += criterion(output, target)*X.shape[0]/(len(val_indices)*seq_len)
+        # validation_loss += criterion(output, target)*X.shape[0]/(len(val_indices))
         if not args.quiet:
             if it == 0:
-                tag = torch.argmax(output[0], dim=0)
+                tag = output_tag[0]
+                # output_tag = postagger.predict(output.view(X.shape[0], seq_len)[0])
                 for i in range(len(X[0])):
                     word_idx = X[0][i].numpy()
                     word = char_embed.clean_idxs2word(word_idx)
@@ -271,12 +276,14 @@ for it, (X, y) in enumerate(validation_loader):
         inputs = X.view(X.shape[0]*seq_len, 1, -1).to(device)
     w_embedding = Variable(model.forward(inputs).view(X.shape[0], 5, -1), requires_grad=False).to(device) # (batch x sent_length x word_emb_dim)
     target = Variable(y).to(device)
-    output = postagger.forward(w_embedding).permute(0, 2, 1)
-    output_tag = torch.argmax(output, dim=1)
+    # output = postagger.forward(w_embedding).permute(0, 2, 1)
+    output, _ = postagger.validation(w_embedding, target)
+    # output_tag = postagger.predict(output.view(X.shape[0], seq_len))
+    output_tag = output.view(X.shape[0], seq_len)
     correct = float((output_tag == target).sum())/(len(val_indices)*seq_len)
     accuracy += correct
     if it <= 3:
-        tag = torch.argmax(output[0], dim=0)
+        tag = output_tag[0]
         for i in range(len(X[0])):
             word_idx = X[0][i].numpy()
             word = char_embed.clean_idxs2word(word_idx)

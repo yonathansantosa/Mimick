@@ -9,26 +9,26 @@ np.random.seed(0)
 
 class Tagset:
     def __init__(self, tagset='brown'):
-        self.idx2tags = {}
-        self.tags2idx = {}
+        self.itot = {}
+        self.toti = {}
         with open ('tagset/%s.txt' % tagset, "r") as myfile:
             data=myfile.readlines()
             sent = "".join([d for d in data])
             processed = re.findall(r"(.*):", sent)
             for i, tag in enumerate(processed):
-                self.tags2idx[tag] = i
+                self.toti[tag] = i
 
             for i, tag in enumerate(processed):
-                self.idx2tags[i] = tag
+                self.itot[i] = tag
 
     def __len__(self):
-        return len(self.idx2tags)
+        return len(self.itot)
         
     def idx2tag(self, idx):
-        return self.idx2tags[idx]
+        return self.itot[idx]
 
     def tag2idx(self, tag):
-        return self.tags2idx[tag]
+        return self.toti[tag]
 
 
 class Postag:
@@ -36,12 +36,32 @@ class Postag:
         if corpus == 'brown':
             from nltk.corpus import brown as corpus
         self.char_embed = char_embed
-        self.tagged_words = corpus.tagged_words(tagset='brown')
-        self.tagged_sents = corpus.tagged_sents(tagset='brown')
+        self.tagged_words = corpus.tagged_words(tagset=tagset)
+        self.tagged_sents = corpus.tagged_sents(tagset=tagset)
         self.tagset = Tagset(tagset=tagset)
+        new_itot = {}
+        new_toti = {}
+        count_bin = torch.zeros(len(self.tagset))
+
+        for word, tag in self.tagged_words:
+            if tag in self.tagset.toti:
+                count_bin[self.tagset.tag2idx(tag)] += 1
+            else:
+                count_bin[self.tagset.tag2idx('UNK')] += 1
+        
+        _, idxs = torch.sort(count_bin, descending=True)
+
+        for it, i in enumerate(idxs):
+            new_itot[it] = self.tagset.itot[int(i)]
+            new_toti[new_itot[it]] = it
+
+        self.tagset.toti = new_toti
+        self.tagset.itot = new_itot
+
 
     def __len__(self):
         return len(self.tagged_sents)
+
 
     def __getitem__(self, index):
         length = len(self.tagged_sents[index])
@@ -51,7 +71,7 @@ class Postag:
         if length-5 <= 0:
             for i in range(length):
                 w, t = self.tagged_sents[index][i]
-                if t in self.tagset.tags2idx:
+                if t in self.tagset.toti:
                     tag_id = self.tagset.tag2idx(t)
                 else:
                     tag_id = self.tagset.tag2idx('UNK')
@@ -66,7 +86,7 @@ class Postag:
             start_index = np.random.randint(0, length-5)
             for i in range(start_index, start_index+5):
                 w, t = self.tagged_sents[index][i]
-                if t in self.tagset.tags2idx:
+                if t in self.tagset.toti:
                     tag_id = self.tagset.tag2idx(t)
                 else:
                     tag_id = self.tagset.tag2idx('UNK')
@@ -99,3 +119,40 @@ class Postagger(nn.Module):
         out = self.mlp(output)
 
         return out
+
+class Postagger_adaptive(nn.Module):
+    def __init__(self, seq_length, emb_dim, hidden_size, output_size):
+        super(Postagger_adaptive, self).__init__()
+        self.hidden_size = hidden_size
+        self.seq_length = seq_length
+        self.lstm = nn.LSTM(emb_dim, self.hidden_size, 1, bidirectional=True, batch_first=True)
+        self.lstm.flatten_parameters()
+        # self.mlp = nn.Sequential(
+        #     nn.Linear(self.hidden_size, output_size),
+        # )
+        self.out = nn.AdaptiveLogSoftmaxWithLoss(hidden_size, output_size, cutoffs=[round(output_size/15),3*round(output_size/15)],div_value=4)
+        
+    def forward(self, inputs, targets):
+        self.lstm.flatten_parameters()
+        out, _ = self.lstm(inputs)
+
+        output = out[:, :, :self.hidden_size] + out[:, :, self.hidden_size:]
+
+        output = output.view(output.shape[0]*output.shape[1], -1)
+        targets = targets.view(targets.shape[0]*targets.shape[1])
+
+        return self.out(output, targets)
+
+    def validation(self, inputs, targets):
+        self.lstm.flatten_parameters()
+        out, _ = self.lstm(inputs)
+
+        output = out[:, :, :self.hidden_size] + out[:, :, self.hidden_size:]
+
+        output = output.view(output.shape[0]*output.shape[1], -1)
+        targets = targets.view(targets.shape[0]*targets.shape[1])
+
+        prediction = self.out.predict(output)
+        _, loss = self.out(output, targets)
+
+        return prediction, float(loss.cpu())
