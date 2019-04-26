@@ -41,17 +41,18 @@ class Postag:
         self.tagset = Tagset(tagset=tagset)
         new_itot = {}
         new_toti = {}
-        count_bin = torch.zeros(len(self.tagset))
+        self.count_bin = torch.zeros(len(self.tagset))
+        self.idxs = torch.zeros(1)
 
         for word, tag in self.tagged_words:
             if tag in self.tagset.toti:
-                count_bin[self.tagset.tag2idx(tag)] += 1
+                self.count_bin[self.tagset.tag2idx(tag)] += 1
             else:
-                count_bin[self.tagset.tag2idx('UNK')] += 1
+                self.count_bin[self.tagset.tag2idx('UNK')] += 1
         
-        _, idxs = torch.sort(count_bin, descending=True)
+        _, self.idxs = torch.sort(self.count_bin, descending=True)
 
-        for it, i in enumerate(idxs):
+        for it, i in enumerate(self.idxs):
             new_itot[it] = self.tagset.itot[int(i)]
             new_toti[new_itot[it]] = it
 
@@ -130,7 +131,8 @@ class Postagger_adaptive(nn.Module):
         # self.mlp = nn.Sequential(
         #     nn.Linear(self.hidden_size, output_size),
         # )
-        self.out = nn.AdaptiveLogSoftmaxWithLoss(hidden_size, output_size, cutoffs=[round(output_size/15),3*round(output_size/15)],div_value=4)
+        # self.out = nn.AdaptiveLogSoftmaxWithLoss(hidden_size, output_size, cutoffs=[round(output_size/15),3*round(output_size/15)], div_value=4)
+        self.out = nn.AdaptiveLogSoftmaxWithLoss(hidden_size, output_size, cutoffs=[8*2,8*6], div_value=4)
         
     def forward(self, inputs, targets):
         self.lstm.flatten_parameters()
