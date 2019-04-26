@@ -179,6 +179,8 @@ random_seed = 64
 shuffle_dataset = args.shuffle
 validation_split = .8
 neighbor = int(args.neighbor)
+np.random.seed(random_seed)
+torch.manual_seed(random_seed)
 
 # *Hyperparameter/
 batch_size = int(args.bsize)

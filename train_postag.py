@@ -88,6 +88,8 @@ shuffle_dataset = args.shuffle
 validation_split = .8
 neighbor = int(args.neighbor)
 seq_len = int(args.seq_len)
+np.random.seed(random_seed)
+torch.manual_seed(random_seed)
 
 # *Hyperparameter
 batch_size = int(args.bsize)
