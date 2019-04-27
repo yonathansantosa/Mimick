@@ -438,6 +438,21 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
         # copy_tree(logger_val_cosine_dir, cloud_dir+logger_val_cosine_dir)
 
+f = open('%s/trained_embedding_%s.txt' % (saved_model_path, args.model), 'w')
+
+for it, (X, y) in enumerate(train_loader):
+    model.zero_grad()
+    words = dataset.idxs2words(X)
+    idxs = char_embed.char_split(words).to(device)
+    if args.model != 'lstm': idxs = idxs.unsqueeze(1)
+    inputs = Variable(idxs) # (length x batch x char_emb_dim)
+
+    output = model.forward(inputs) # (batch x word_emb_dim)
+    for w, e in zip(words,output):
+        f.write('%s ' % w)
+        f.write('%s\n' % ' '.join(map(str,[weight for weight in e.data.cpu().tolist()])))
+
+
 for it, (X, target) in enumerate(validation_loader):
     words = dataset.idxs2words(X)
     idxs = char_embed.char_split(words).to(device)
@@ -448,6 +463,9 @@ for it, (X, target) in enumerate(validation_loader):
     model.zero_grad()
 
     output = model.forward(inputs) # (batch x word_emb_dim)
+    for w, e in zip(words,output):
+        f.write('%s ' % w)
+        f.write('%s\n' % ' '.join(map(str,[weight for weight in e.data.cpu().tolist()])))
     mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
     distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
     for i, word in enumerate(X):
@@ -457,3 +475,5 @@ for it, (X, target) in enumerate(validation_loader):
         print('%.4f | ' % loss_dist.item() + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
             
     if it > 3: break
+
+f.close()
