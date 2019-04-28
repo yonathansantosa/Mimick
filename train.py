@@ -476,4 +476,9 @@ for it, (X, target) in enumerate(validation_loader):
             
     if it > 3: break
 
-f.close()
+# random_embedding = torch.zeros(emb_dim).tolist()
+# f.write('<unk> ')
+# f.write('%s\n' % ' '.join(map(str,[weight for weight in random_embedding])))
+# f.write('<pad> ')
+# f.write('%s\n' % ' '.join(map(str,[weight for weight in random_embedding])))
+# f.close()
