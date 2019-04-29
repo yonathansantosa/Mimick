@@ -42,6 +42,13 @@ class Word_embedding:
     def __len__(self):
         return len(self.itos)
     
+    def update_weight(self, weight):
+        new_emb = Vectors(weight)
+        self.embedding_vectors = new_emb.vectors
+        self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=True, sparse=True)
+        self.stoi = new_emb.stoi
+        self.itos = new_emb.itos
+
     def word2idx(self, c):
         return self.stoi[c]
 
