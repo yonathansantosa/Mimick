@@ -162,6 +162,27 @@ model.eval()
 
 #* Creating PT data samplers and loaders:
 dataset = Postag(word_embedding, model, char_embed, args.model)
+new_word = []
+
+for (word, _) in dataset.tagged_words:
+    if word not in word_embedding.stoi:
+        inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
+        if args.model != 'lstm': inputs = inputs.unsqueeze(1)
+        output = model.forward(inputs).detach()
+        new_word += [output.cpu()]
+        
+        word_embedding.stoi[word] = len(word_embedding.stoi)
+        word_embedding.itos += word
+
+inputs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
+if args.model != 'lstm': inputs = inputs.unsqueeze(1)
+output = model.forward(inputs).detach()                    
+new_word += [output.cpu()]
+new_word = torch.stack(new_word).squeeze()
+word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
+word_embedding.itos += '<pad>'
+    
+word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
 
 dataset_size = len(dataset)
 indices = list(range(dataset_size))
@@ -194,16 +215,20 @@ criterion = nn.NLLLoss()
 if args.init_weight: postagger.apply(init_weights)
 step = 0
 
+print('before training')
+
 #* Training
 for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
+# for epoch in range(int(args.epoch), max_epoch):
     loss_item = 0.
     postagger.train()
-    for it, (X, y, _) in enumerate(train_loader):
+    for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
-        inputs = Variable(X, requires_grad=True).to(device)
+        # print('here')
+        inputs = Variable(word_embedding.word_embedding(X.to(device)), requires_grad=True)
         target = Variable(y).to(device)
         # output = postagger.forward(w_embedding, target).permute(0, 2, 1)
-        output, loss = postagger.forward(X, target)
+        output, loss = postagger.forward(inputs, target)
 
         # loss = criterion(output, target)
         
@@ -234,26 +259,27 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     postagger.eval()
     validation_loss = 0.
     accuracy = 0.
-    for it, (X, y, w) in enumerate(validation_loader):
-        inputs = Variable(X).to(device)
+    for it, (X, y) in enumerate(validation_loader):
+        inputs = Variable(word_embedding.word_embedding(X.to(device)))
         target = Variable(y).to(device)
         # output = postagger.forward(w_embedding).permute(0, 2, 1)
         output, validation_loss = postagger.validation(inputs, target)
         # output_tag = postagger.predict(output.view(X.shape[0], seq_len))
         output_tag = output.view(X.shape[0], seq_len)
-        correct = (output_tag == target).sum()/(len(val_indices)*seq_len)
-        accuracy += correct
+        accuracy += float((output_tag == target).sum())
+
         # validation_loss += criterion(output, target)*X.shape[0]/(len(val_indices))
         if not args.quiet:
             if it == 0:
                 tag = output_tag[0]
                 # output_tag = postagger.predict(output.view(X.shape[0], seq_len)[0])
-                for i in range(len(w[0])):
-                    word_idx = w[0][i].cpu().numpy()
-                    word = char_embed.clean_idxs2word(word_idx)
+                for i in range(len(X[0])):
+                    word_idx = X[0][i].cpu().numpy()
+                    word = word_embedding.idx2word(word_idx)
                     tg = dataset.tagset.idx2tag(int(tag[i].cpu()))
                     tgt = dataset.tagset.idx2tag(int(y[0][i]))
                     tqdm.write('(%s, %s) => %s' % (word, tgt, tg))
+    accuracy /= (seq_len*len(val_indices))
     if not args.quiet: tqdm.write('accuracy = %.4f' % accuracy)
 
     info_val = {
@@ -271,23 +297,23 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
 postagger.eval()
 
 accuracy = 0.
-for it, (X, y, w) in enumerate(validation_loader):
-    inputs = Variable(X).to(device)
+for it, (X, y) in enumerate(validation_loader):
+    inputs = Variable(word_embedding.word_embedding(X.to(device)))
     target = Variable(y).to(device)
     # output = postagger.forward(w_embedding).permute(0, 2, 1)
     output, _ = postagger.validation(inputs, target)
     # output_tag = postagger.predict(output.view(X.shape[0], seq_len))
     output_tag = output.view(X.shape[0], seq_len)
-    correct = float((output_tag == target).sum())/(len(val_indices)*seq_len)
-    accuracy += correct
+    accuracy += float((output_tag == target).sum())
     if it <= 3:
         tag = output_tag[0]
-        for i in range(len(w[0])):
-            word_idx = w[0][i].cpu().numpy()
-            word = char_embed.clean_idxs2word(word_idx)
+        for i in range(len(X[0])):
+            word_idx = X[0][i].cpu().numpy()
+            word = word_embedding.idx2word(word_idx)
             tg = dataset.tagset.idx2tag(int(tag[i].cpu()))
             tgt = dataset.tagset.idx2tag(int(y[0][i]))
             tqdm.write('(%s, %s) => %s' % (word, tgt, tg))
         tqdm.write('\n')
+accuracy /= (seq_len*len(val_indices))
 print('accuracy = %.4f' % accuracy)
     

@@ -71,38 +71,26 @@ class Postag:
     def __getitem__(self, index):
         length = len(self.tagged_sents[index])
         word = []
-        word_emb = []
         tag = []
         
         if length-5 <= 0:
             for i in range(length):
                 w, t = self.tagged_sents[index][i]
-                word += [self.char_embed.word2idxs(w)]
+                word += [self.word_embed.word2idx(w)]
+                
                 if t in self.tagset.toti:
                     tag_id = self.tagset.tag2idx(t)
                 else:
                     tag_id = self.tagset.tag2idx('UNK')
-
-                if w in self.word_embed.stoi:
-                    idx = torch.LongTensor([self.word_embed.stoi[w]])
-                    word_emb += [self.word_embed.word_embedding(idx).to(self.device)]
-                else:
-                    inputs = self.char_embed.word2idxs(w).unsqueeze(0).to(self.device).detach()
-                    if self.model_name != 'lstm': inputs = inputs.unsqueeze(1)
-
-                    output = self.model.forward(inputs).detach()
-                    word_emb += [output]
-
+                    
                 tag += [tag_id]
+
             for i in range(length, 5):
-                word += [self.char_embed.word2idxs('<pad>')]
+                word += [self.word_embed.word2idx('<pad>')]
                 tag_id = self.tagset.tag2idx('UNK')
-                inputs = self.char_embed.word2idxs('<pad>').unsqueeze(0).to(self.device).detach()
-                if self.model_name != 'lstm': inputs = inputs.unsqueeze(1)
 
-                output = self.model.forward(inputs).detach()
-                word_emb += [output]
                 tag += [tag_id]
+
         else:
             start_index = np.random.randint(0, length-5)
             for i in range(start_index, start_index+5):
@@ -111,21 +99,12 @@ class Postag:
                     tag_id = self.tagset.tag2idx(t)
                 else:
                     tag_id = self.tagset.tag2idx('UNK')
-                if w in self.word_embed.stoi:
-                    word += [self.char_embed.word2idxs(w)]
-                    idx = torch.LongTensor([self.word_embed.stoi[w]])
-                    word_emb += [self.word_embed.word_embedding(idx).to(self.device)]
-                else:
-                    word += [self.char_embed.word2idxs(w)]
-                    inputs = self.char_embed.word2idxs(w).unsqueeze(0).to(self.device).detach()
-                    if self.model_name != 'lstm': inputs = inputs.unsqueeze(1)
-
-                    output = self.model.forward(inputs).detach()
-                    word_emb += [output]
-
+                word += [self.word_embed.word2idx(w)]
                 tag += [tag_id]
         
-        return (torch.stack(word_emb, dim=0).squeeze(), torch.LongTensor(tag), torch.stack(word))
+        # word_emb = self.word_embed.word_embedding(torch.tensor(word).to(self.device))
+        # return (word_emb, torch.LongTensor(tag).view(len(tag), 1), torch.LongTensor(word).view(len(word), 1))
+        return (torch.LongTensor(word), torch.LongTensor(tag))
 
 class Postag_word:
     def __init__(self, word_embed, char_embed, corpus='brown', tagset='brown'):
