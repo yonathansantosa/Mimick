@@ -131,6 +131,23 @@ class Char_embedding:
     def idxs2word(self, idxs):
         return "".join([self.idx2char[idx] for idx in idxs])
 
+    def word2idxs(self, word):
+        char_data = []
+        chars = list(word)
+        chars = ['<sow>'] + chars
+        if len(chars) > self.char_max_len:
+            # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
+            c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars[:self.char_max_len]]
+        elif len(chars) <= self.char_max_len:
+            # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
+            c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars]                
+            if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
+            for i in range(self.char_max_len-len(chars)-1):
+                c_idx.append(self.char2idx['<pad>'])
+        char_data += c_idx
+
+        return torch.LongTensor(char_data)
+
     def clean_idxs2word(self, idxs):
         idxs = [i for i in idxs if i != 0 and i != 1 and i != 2 and i != 3]
         return "".join([self.idx2char[idx] for idx in idxs])
