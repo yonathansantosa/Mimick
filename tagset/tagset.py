@@ -32,10 +32,10 @@ class Tagset:
 
 
 class Postag:
-    def __init__(self, char_embed, corpus='brown', tagset='brown'):
+    def __init__(self, word_embed, model, char_embed, model_name, corpus='brown', tagset='brown', device='cuda'):
         if corpus == 'brown':
             from nltk.corpus import brown as corpus
-        self.char_embed = char_embed
+        self.word_embed = word_embed
         self.tagged_words = corpus.tagged_words(tagset=tagset)
         self.tagged_sents = corpus.tagged_sents(tagset=tagset)
         self.tagset = Tagset(tagset=tagset)
@@ -43,6 +43,10 @@ class Postag:
         new_toti = {}
         self.count_bin = torch.zeros(len(self.tagset))
         self.idxs = torch.zeros(1)
+        self.model = model
+        self.char_embed = char_embed
+        self.model_name = model_name
+        self.device = device
 
         for word, tag in self.tagged_words:
             if tag in self.tagset.toti:
@@ -67,21 +71,37 @@ class Postag:
     def __getitem__(self, index):
         length = len(self.tagged_sents[index])
         word = []
+        word_emb = []
         tag = []
         
         if length-5 <= 0:
             for i in range(length):
                 w, t = self.tagged_sents[index][i]
+                word += [self.char_embed.word2idxs(w)]
                 if t in self.tagset.toti:
                     tag_id = self.tagset.tag2idx(t)
                 else:
                     tag_id = self.tagset.tag2idx('UNK')
-                word += [w]
+
+                if w in self.word_embed.stoi:
+                    idx = torch.LongTensor([self.word_embed.stoi[w]])
+                    word_emb += [self.word_embed.word_embedding(idx).to(self.device)]
+                else:
+                    inputs = self.char_embed.word2idxs(w).unsqueeze(0).to(self.device).detach()
+                    if self.model_name != 'lstm': inputs = inputs.unsqueeze(1)
+
+                    output = self.model.forward(inputs).detach()
+                    word_emb += [output]
+
                 tag += [tag_id]
             for i in range(length, 5):
-                w = '<pad>'
+                word += [self.char_embed.word2idxs('<pad>')]
                 tag_id = self.tagset.tag2idx('UNK')
-                word += [w]
+                inputs = self.char_embed.word2idxs('<pad>').unsqueeze(0).to(self.device).detach()
+                if self.model_name != 'lstm': inputs = inputs.unsqueeze(1)
+
+                output = self.model.forward(inputs).detach()
+                word_emb += [output]
                 tag += [tag_id]
         else:
             start_index = np.random.randint(0, length-5)
@@ -91,12 +111,76 @@ class Postag:
                     tag_id = self.tagset.tag2idx(t)
                 else:
                     tag_id = self.tagset.tag2idx('UNK')
-                word += [w]
+                if w in self.word_embed.stoi:
+                    word += [self.char_embed.word2idxs(w)]
+                    idx = torch.LongTensor([self.word_embed.stoi[w]])
+                    word_emb += [self.word_embed.word_embedding(idx).to(self.device)]
+                else:
+                    word += [self.char_embed.word2idxs(w)]
+                    inputs = self.char_embed.word2idxs(w).unsqueeze(0).to(self.device).detach()
+                    if self.model_name != 'lstm': inputs = inputs.unsqueeze(1)
+
+                    output = self.model.forward(inputs).detach()
+                    word_emb += [output]
+
                 tag += [tag_id]
+        
+        return (torch.stack(word_emb, dim=0).squeeze(), torch.LongTensor(tag), torch.stack(word))
 
-        word = self.char_embed.char_split(word)
-        return (torch.LongTensor(word), torch.LongTensor(tag))
+class Postag_word:
+    def __init__(self, word_embed, char_embed, corpus='brown', tagset='brown'):
+        if corpus == 'brown':
+            from nltk.corpus import brown as corpus
+        self.char_embed = char_embed
+        self.tagged_words = corpus.tagged_words(tagset=tagset)
+        self.tagged_sents = corpus.tagged_sents(tagset=tagset)
+        self.tagset = Tagset(tagset=tagset)
+        new_itot = {}
+        new_toti = {}
+        self.word_embed = word_embed
+        self.count_bin = torch.zeros(len(self.tagset))
+        self.idxs = torch.zeros(1)
 
+        for word, tag in self.tagged_words:
+            if tag in self.tagset.toti:
+                self.count_bin[self.tagset.tag2idx(tag)] += 1
+            else:
+                self.count_bin[self.tagset.tag2idx('UNK')] += 1
+        
+        _, self.idxs = torch.sort(self.count_bin, descending=True)
+
+        for it, i in enumerate(self.idxs):
+            new_itot[it] = self.tagset.itot[int(i)]
+            new_toti[new_itot[it]] = it
+
+        self.tagset.toti = new_toti
+        self.tagset.itot = new_itot
+
+
+    def __len__(self):
+        return len(self.tagged_sents)
+
+
+    def __getitem__(self, index):
+        word, tag = self.tagged_words[index]
+        
+        # if word in self.word_embed.stoi:
+        #     w_idx = self.word_embed.stoi[word]
+        # else:
+        #     w_idx = self.word_embed.stoi['</s>']
+
+        w_c_idx = self.char_embed.word2idxs(word)
+        if tag in self.tagset.toti:
+            tag_id = self.tagset.tag2idx(tag)
+        else:
+            tag_id = self.tagset.tag2idx('UNK')
+        
+        try:
+            w_idx = self.word_embed.stoi[word]
+        except:
+            pass
+
+        return (torch.LongTensor(w_idx), torch.LongTensor(w_c_idx), torch.LongTensor(tag_id))
 
 class Postagger(nn.Module):
     def __init__(self, seq_length, emb_dim, hidden_size, output_size):
