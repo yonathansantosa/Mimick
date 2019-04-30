@@ -144,6 +144,7 @@ parser.add_argument('--momentum', default=0)
 parser.add_argument('--multiplier', default=1)
 parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
+parser.add_argument('--seed', default=64)
 
 
 
@@ -165,7 +166,7 @@ if not args.local:
 print(saved_model_path)
 logger = Logger(logger_dir)
 logger_val = Logger(logger_val_dir)
-logger_val_cosine = Logger(logger_val_cosine_dir)
+# logger_val_cosine = Logger(logger_val_cosine_dir)
 
 
 # *Device configuration
@@ -175,7 +176,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 run = int(args.run)
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
-random_seed = 64
+random_seed = int(args.seed)
 shuffle_dataset = args.shuffle
 validation_split = .8
 neighbor = int(args.neighbor)

@@ -106,13 +106,6 @@ char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=Tru
 # char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 # char_embed.embed.eval()
 
-
-if shuffle_dataset:
-    np.random.seed(random_seed)
-    np.random.shuffle(indices)
-
-
-
 #* Initializing model
 word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding)
 word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
