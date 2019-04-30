@@ -59,6 +59,7 @@ parser.add_argument('--multiplier', default=1)
 parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
 parser.add_argument('--seq_len', default=5)
+parser.add_argument('--seed', default=64)
 
 args = parser.parse_args()
 
@@ -83,7 +84,7 @@ logger_val = Logger(logger_val_dir)
 # *Parameters
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
-random_seed = 64
+random_seed = int(args.seed)
 shuffle_dataset = args.shuffle
 validation_split = .8
 neighbor = int(args.neighbor)
