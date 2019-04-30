@@ -155,7 +155,7 @@ cloud_dir = '/content/gdrive/My Drive/train_dropout/'
 saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
 logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_model_path, args.run)
-logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_model_path, args.run)
+# logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_model_path, args.run)
 
 
 if not args.local:
@@ -203,9 +203,8 @@ dataset_size = len(dataset)
 indices = list(range(dataset_size))
 split = int(np.floor(validation_split * dataset_size))
 
-if shuffle_dataset:
-    np.random.seed(random_seed)
-    np.random.shuffle(indices)
+# if shuffle_dataset:
+np.random.shuffle(indices)
 
 #* Creating PT data samplers and loaders:
 train_indices, val_indices = indices[:split], indices[split:]
@@ -325,7 +324,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # save_iteration(step, args.local)
 
         step += 1
-        if run != 1:
+        if run = 1:
             for tag, value in info.items():
                 logger.scalar_summary(tag, value, step)
         # gradcheck(model.forward, inputs[0].unsqueeze(0).unsqueeze(0), eps=1e-4)
@@ -427,7 +426,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     #     'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
     # }
 
-    if run != 1:
+    if run = 1:
         for tag, value in info_val.items():
             logger_val.scalar_summary(tag, value, step)
         # for tag, value in info_cosine_val.items():
