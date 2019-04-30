@@ -324,9 +324,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         # save_iteration(step, args.local)
 
         step += 1
-        if run = 1:
-            for tag, value in info.items():
-                logger.scalar_summary(tag, value, step)
+        for tag, value in info.items():
+            logger.scalar_summary(tag, value, step)
         # gradcheck(model.forward, inputs[0].unsqueeze(0).unsqueeze(0), eps=1e-4)
         
         if not args.loss_reduction:
@@ -426,9 +425,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     #     'loss-Train-%s-run%s' % (args.model, args.run) : cosine_dist
     # }
 
-    if run = 1:
-        for tag, value in info_val.items():
-            logger_val.scalar_summary(tag, value, step)
+    for tag, value in info_val.items():
+        logger_val.scalar_summary(tag, value, step)
         # for tag, value in info_cosine_val.items():
         #     logger_val_cosine.scalar_summary(tag, value, step)    
     model.train()
