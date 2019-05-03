@@ -43,9 +43,6 @@ class Postag:
         new_toti = {}
         self.count_bin = torch.zeros(len(self.tagset))
         self.idxs = torch.zeros(1)
-        self.model = model
-        self.char_embed = char_embed
-        self.model_name = model_name
         self.device = device
 
         for word, tag in self.tagged_words:
