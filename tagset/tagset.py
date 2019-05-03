@@ -32,7 +32,7 @@ class Tagset:
 
 
 class Postag:
-    def __init__(self, word_embed, model, char_embed, model_name, corpus='brown', tagset='brown', device='cuda'):
+    def __init__(self, word_embed, corpus='brown', tagset='brown', device='cuda'):
         if corpus == 'brown':
             from nltk.corpus import brown as corpus
         self.word_embed = word_embed
