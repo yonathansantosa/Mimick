@@ -1,7 +1,8 @@
 import nltk
 import numpy as np
 from nltk.corpus import brown
-from tagset.tagset import Postag, Postagger, Postagger_adaptive
+# from tagset.tagset import Postag, Postagger, Postagger_adaptive
+from tagset.tagset_ud import Postag, Postagger_adaptive
 
 import torch
 import torch.nn as nn
@@ -109,7 +110,7 @@ char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=Tru
 
 #* Initializing model
 word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding)
-if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
+# if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
 emb_dim = word_embedding.emb_dim
 
 if args.model == 'lstm':
@@ -156,7 +157,7 @@ model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 model.eval()
 
 #* Creating PT data samplers and loaders:
-dataset = Postag(word_embedding, model, char_embed, args.model)
+dataset = Postag(word_embedding)
 new_word = []
 
 for (word, _) in dataset.tagged_words:
