@@ -52,6 +52,7 @@ parser.add_argument('--init_weight', default=False, action='store_true')
 parser.add_argument('--shuffle', default=False, action='store_true')
 parser.add_argument('--nesterov', default=False, action='store_true')
 parser.add_argument('--loss_reduction', default=False, action='store_true')
+parser.add_argument('--oov_random', default=False)
 parser.add_argument('--num_feature', default=100)
 parser.add_argument('--weight_decay', default=0)
 parser.add_argument('--momentum', default=0)
@@ -159,22 +160,35 @@ dataset = Postag(word_embedding, model, char_embed, args.model)
 new_word = []
 
 for (word, _) in dataset.tagged_words:
-    if word not in word_embedding.stoi:
-        inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
-        if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-        output = model.forward(inputs).detach()
-        new_word += [output.cpu()]
-        
-        word_embedding.stoi[word] = len(word_embedding.stoi)
-        word_embedding.itos += word
+    if args.oov_random:
+        if word not in word_embedding.stoi:
+            new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
+            
+            word_embedding.stoi[word] = len(word_embedding.stoi)
+            word_embedding.itos += word
+    else:
+        if word not in word_embedding.stoi:
+            inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
+            if args.model != 'lstm': inputs = inputs.unsqueeze(1)
+            output = model.forward(inputs).detach()
+            new_word += [output.cpu()]
+            
+            word_embedding.stoi[word] = len(word_embedding.stoi)
+            word_embedding.itos += word
 
-inputs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
-if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-output = model.forward(inputs).detach()                    
-new_word += [output.cpu()]
-new_word = torch.stack(new_word).squeeze()
-word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
-word_embedding.itos += '<pad>'
+if args.oov_random:
+    new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
+            
+    word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
+    word_embedding.itos += '<pad>'
+else:
+    inputs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
+    if args.model != 'lstm': inputs = inputs.unsqueeze(1)
+    output = model.forward(inputs).detach()                    
+    new_word += [output.cpu()]
+    new_word = torch.stack(new_word).squeeze()
+    word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
+    word_embedding.itos += '<pad>'
     
 word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
 

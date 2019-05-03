@@ -191,11 +191,8 @@ class Postagger_adaptive(nn.Module):
         self.seq_length = seq_length
         self.lstm = nn.LSTM(emb_dim, self.hidden_size, 1, bidirectional=True, batch_first=True)
         self.lstm.flatten_parameters()
-        # self.mlp = nn.Sequential(
-        #     nn.Linear(self.hidden_size, output_size),
-        # )
-        # self.out = nn.AdaptiveLogSoftmaxWithLoss(hidden_size, output_size, cutoffs=[round(output_size/15),3*round(output_size/15)], div_value=4)
-        self.out = nn.AdaptiveLogSoftmaxWithLoss(hidden_size, output_size, cutoffs=[8*2,8*6], div_value=4)
+        
+        self.out = nn.AdaptiveLogSoftmaxWithLoss(hidden_size, output_size, cutoffs=[round(output_size/5),2*round(output_size/5)], div_value=4)
         
     def forward(self, inputs, targets):
         self.lstm.flatten_parameters()
