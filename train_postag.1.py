@@ -109,7 +109,7 @@ char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=Tru
 
 #* Initializing model
 word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding)
-word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
+if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
 emb_dim = word_embedding.emb_dim
 
 if args.model == 'lstm':
@@ -171,14 +171,14 @@ for (word, _) in dataset.tagged_words:
             inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
             if args.model != 'lstm': inputs = inputs.unsqueeze(1)
             output = model.forward(inputs).detach()
-            new_word += [output.cpu()]
-            
             word_embedding.stoi[word] = len(word_embedding.stoi)
             word_embedding.itos += word
+            new_word += [output.cpu()]
+
 
 if args.oov_random:
     new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
-            
+    new_word = torch.stack(new_word).squeeze()
     word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
     word_embedding.itos += '<pad>'
 else:
