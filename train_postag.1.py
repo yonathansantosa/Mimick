@@ -74,6 +74,7 @@ saved_postag_path = 'trained_model_%s_%s_%s_postag' % (args.lang, args.model, ar
 logger_dir = '%s/logs/run%s/' % (saved_postag_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)
 logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_postag_path, args.run)
+tagset = 'ud'
 
 if not args.local:
     # logger_dir = cloud_dir + logger_dir
