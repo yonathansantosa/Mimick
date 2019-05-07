@@ -1,8 +1,8 @@
 import nltk
 import numpy as np
 from nltk.corpus import brown
-# from tagset.tagset import Postag, Postagger, Postagger_adaptive
-from tagset.tagset_ud import Postag, Postagger_adaptive
+from tagset.tagset import Postag, Postagger, Postagger_adaptive
+# from tagset.tagset_ud import Postag, Postagger_adaptive
 
 import torch
 import torch.nn as nn
