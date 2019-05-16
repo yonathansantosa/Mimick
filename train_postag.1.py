@@ -164,12 +164,12 @@ else:
     model.eval()
 
 #* Creating PT data samplers and loaders:
+original_vocab_len = len(word_embedding)
 print('total word = %d' % len(word_embedding))
 dataset = Postag(word_embedding)
 new_word = []
 oov = 0
 invocab = 0
-
 tagged_words = set([word for word, _ in dataset.tagged_words])
 if not args.continue_model:
     for word in tagged_words:
@@ -220,10 +220,12 @@ else:
         new_word = torch.stack(new_word).squeeze()
     else:
         new_word += [torch.zeros(emb_dim, dtype=torch.float)]
+        new_word = torch.stack(new_word).squeeze()
+        
     word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
     word_embedding.itos += '<pad>'
     
-if not args.continue_model: word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
+word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
 
 dataset_size = len(dataset)
 indices = list(range(dataset_size))
@@ -276,7 +278,11 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             idxs = char_embed.char_sents_split(words).to(device)
             if args.model != 'lstm': idxs = idxs.unsqueeze(1)
             inputs = Variable(idxs)
-            embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
+            mask = (X <= original_vocab_len).type(torch.FloatTensor).unsqueeze(2).to(device)
+            pretrained_embeddings = word_embedding.word_embedding(X.to(device))
+            generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
+            embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
+
         target = Variable(y).to(device)
         output, loss = postagger.forward(embeddings, target)
         
