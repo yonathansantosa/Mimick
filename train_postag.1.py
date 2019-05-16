@@ -62,6 +62,8 @@ parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
 parser.add_argument('--seq_len', default=5)
 parser.add_argument('--seed', default=64)
+parser.add_argument('--tagset', default='brown')
+parser.add_argument('--continue_model', default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -74,7 +76,6 @@ saved_postag_path = 'trained_model_%s_%s_%s_postag' % (args.lang, args.model, ar
 logger_dir = '%s/logs/run%s/' % (saved_postag_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)
 logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_postag_path, args.run)
-tagset = 'ud'
 
 if not args.local:
     # logger_dir = cloud_dir + logger_dir
@@ -94,6 +95,7 @@ neighbor = int(args.neighbor)
 seq_len = int(args.seq_len)
 np.random.seed(random_seed)
 torch.manual_seed(random_seed)
+tag_set = args.tagset
 
 # *Hyperparameter
 batch_size = int(args.bsize)
@@ -111,7 +113,7 @@ char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=Tru
 
 #* Initializing model
 word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding)
-# if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
+if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
 emb_dim = word_embedding.emb_dim
 
 if args.model == 'lstm':
@@ -130,7 +132,7 @@ elif args.model == 'cnn':
         char_max_len=char_embed.char_max_len, 
         char_emb_dim=char_embed.char_emb_dim, 
         emb_dim=emb_dim,
-        num_feature=int(args.num_feature), 
+        num_feature=int(args.num_feature),
         random=False, asc=args.asc)
 elif args.model == 'cnn3':
     model = mimick_cnn3(
@@ -155,27 +157,53 @@ else:
 
 model.to(device)
 model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
-model.eval()
+
+if args.continue_model:
+    model.train()
+else:
+    model.eval()
 
 #* Creating PT data samplers and loaders:
+print('total word = %d' % len(word_embedding))
 dataset = Postag(word_embedding)
 new_word = []
+oov = 0
+invocab = 0
 
-for (word, _) in dataset.tagged_words:
-    if args.oov_random:
-        if word not in word_embedding.stoi:
-            new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
-            
+tagged_words = set([word for word, _ in dataset.tagged_words])
+if not args.continue_model:
+    for word in tagged_words:
+        if args.oov_random:
+            if word not in word_embedding.stoi:
+                new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
+                word_embedding.stoi[word] = len(word_embedding.stoi)
+                word_embedding.itos += word
+                oov += 1
+            else:
+                invocab += 1
+        else:
+            if word not in word_embedding.stoi:
+                inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
+                if args.model != 'lstm': inputs = inputs.unsqueeze(1)
+                output = model.forward(inputs).detach()
+                word_embedding.stoi[word] = len(word_embedding.stoi)
+                word_embedding.itos += word
+                new_word += [output.cpu()]
+                oov += 1
+            else:
+                invocab += 1
+else:
+    for word in tagged_words:
+        if word not in word_embedding.stoi: 
             word_embedding.stoi[word] = len(word_embedding.stoi)
             word_embedding.itos += word
-    else:
-        if word not in word_embedding.stoi:
-            inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
-            if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-            output = model.forward(inputs).detach()
-            word_embedding.stoi[word] = len(word_embedding.stoi)
-            word_embedding.itos += word
-            new_word += [output.cpu()]
+            new_word += [torch.zeros(emb_dim, dtype=torch.float)]
+            oov += 1
+        else:
+            invocab += 1
+
+print('oov = %d' % oov)
+print('invocab = %d' % invocab)
 
 
 if args.oov_random:
@@ -184,15 +212,18 @@ if args.oov_random:
     word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
     word_embedding.itos += '<pad>'
 else:
-    inputs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
-    if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-    output = model.forward(inputs).detach()                    
-    new_word += [output.cpu()]
-    new_word = torch.stack(new_word).squeeze()
+    if not args.continue_model:
+        inputs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
+        if args.model != 'lstm': inputs = inputs.unsqueeze(1)
+        output = model.forward(inputs).detach()                    
+        new_word += [output.cpu()]
+        new_word = torch.stack(new_word).squeeze()
+    else:
+        new_word += [torch.zeros(emb_dim, dtype=torch.float)]
     word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
     word_embedding.itos += '<pad>'
     
-word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
+if not args.continue_model: word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
 
 dataset_size = len(dataset)
 indices = list(range(dataset_size))
@@ -219,7 +250,10 @@ postagger = Postagger_adaptive(seq_len, emb_dim, 20, len(dataset.tagset)).to(dev
 if args.load:
     postagger.load_state_dict(torch.load('%s/postag.pth' % (saved_postag_path)))
     
-optimizer = optim.SGD(postagger.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
+if args.continue_model:
+    optimizer = optim.SGD(list(postagger.parameters()) + list(model.parameters()), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
+else:
+    optimizer = optim.SGD(postagger.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 criterion = nn.NLLLoss()
 
 if args.init_weight: postagger.apply(init_weights)
@@ -232,15 +266,19 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
 # for epoch in range(int(args.epoch), max_epoch):
     loss_item = 0.
     postagger.train()
+    if args.continue_model: model.train()
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
-        # print('here')
-        inputs = Variable(word_embedding.word_embedding(X.to(device)), requires_grad=True)
+        if not args.continue_model:
+            inputs = Variable(word_embedding.word_embedding(X.to(device)), requires_grad=True)
+        else:
+            words = [word_embedding.idxs2words(x) for x in X]
+            idxs = char_embed.char_sents_split(words).to(device)
+            if args.model != 'lstm': idxs = idxs.unsqueeze(1)
+            inputs = Variable(idxs)
+            embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
         target = Variable(y).to(device)
-        # output = postagger.forward(w_embedding, target).permute(0, 2, 1)
-        output, loss = postagger.forward(inputs, target)
-
-        # loss = criterion(output, target)
+        output, loss = postagger.forward(embeddings, target)
         
         # ##################
         # Tensorboard
@@ -263,17 +301,26 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         copy_tree(logger_dir, cloud_dir+logger_dir)
         
     torch.save(postagger.state_dict(), '%s/postag.pth' % (saved_postag_path))
+    torch.save(model.state_dict(), '%s/%s.pth' % (saved_postag_path, args.model))
     if not args.quiet: tqdm.write('%d | %.4f ' % (epoch, loss_item))
 
     #* Validation
     postagger.eval()
+    model.eval()
     validation_loss = 0.
     accuracy = 0.
     for it, (X, y) in enumerate(validation_loader):
-        inputs = Variable(word_embedding.word_embedding(X.to(device)))
+        if not args.continue_model:
+            inputs = Variable(word_embedding.word_embedding(X.to(device)))
+        else:
+            words = [word_embedding.idxs2words(x) for x in X]
+            idxs = char_embed.char_sents_split(words).to(device)
+            if args.model != 'lstm': idxs = idxs.unsqueeze(1)
+            inputs = Variable(idxs)
+            embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
         target = Variable(y).to(device)
         # output = postagger.forward(w_embedding).permute(0, 2, 1)
-        output, validation_loss = postagger.validation(inputs, target)
+        output, validation_loss = postagger.validation(embeddings, target)
         # output_tag = postagger.predict(output.view(X.shape[0], seq_len))
         output_tag = output.view(X.shape[0], seq_len)
         accuracy += float((output_tag == target).sum())
@@ -305,13 +352,21 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     postagger.train()
 
 postagger.eval()
+model.eval()
 
 accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):
-    inputs = Variable(word_embedding.word_embedding(X.to(device)))
+    if not args.continue_model:
+        inputs = Variable(word_embedding.word_embedding(X.to(device)))
+    else:
+        words = [word_embedding.idxs2words(x) for x in X]
+        idxs = char_embed.char_sents_split(words).to(device)
+        if args.model != 'lstm': idxs = idxs.unsqueeze(1)
+        inputs = Variable(idxs)
+        embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
     target = Variable(y).to(device)
     # output = postagger.forward(w_embedding).permute(0, 2, 1)
-    output, _ = postagger.validation(inputs, target)
+    output, _ = postagger.validation(embeddings, target)
     # output_tag = postagger.predict(output.view(X.shape[0], seq_len))
     output_tag = output.view(X.shape[0], seq_len)
     accuracy += float((output_tag == target).sum())

@@ -46,6 +46,7 @@ class Word_embedding:
         new_emb = Vectors(weight)
         self.embedding_vectors = new_emb.vectors
         self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=True, sparse=True)
+        self.emb_dim = self.embedding_vectors.size(1)
         self.stoi = new_emb.stoi
         self.itos = new_emb.itos
 
@@ -75,3 +76,66 @@ class Word_embedding:
 
     def get_word_vectors(self):
         return self.word_embedding
+
+class Word_embedding_test:
+    def __init__(self, emb_dim=300):
+        '''
+        Initializing word embedding
+        Parameter:
+        emb_dim = (int) embedding dimension for word embedding
+        '''
+        self.embedding = './.vector_cache/GoogleNews-vectors-negative300.bin.gz-'
+        self.stoi = "./.vector_cache/stoi.txt"
+        self.emb_dim = 0
+
+        with open('%s%d.txt' % (self.embedding, 0), encoding='utf-8') as fp:
+            for line in fp:
+               entry = line.split(' ')
+               self.emb_dim = len(entry) - 1
+        
+    def __getitem__(self, index):
+        file_id = index // 100000
+        file_line = index % 100000
+        vector = None
+        with open('%s%d.txt' % (self.embedding, file_id), encoding='utf-8') as fp:
+            for i, line in enumerate(fp):
+                if i == file_line:
+                    entry = line.split(' ')
+                    vector = np.array(entry[1:], dtype=np.float32)
+                elif i > file_line:
+                    break
+        return (torch.tensor([file_id, file_line], dtype=torch.long), torch.tensor(vector))
+
+    def __len__(self):
+        with open(self.stoi, encoding='utf-8') as f:
+            for i, l in enumerate(f):
+                pass
+        return i + 1
+
+    def idx2word(self, file_idx, file_line):
+        with open('%s%d.txt' % (self.embedding, file_idx), encoding='utf-8') as fp:
+            for i, line in enumerate(fp):
+                if i == file_line:
+                    entry = line.split(' ')
+                    return(entry[0])
+                elif i > file_line:
+                    break
+    
+    # def idxs2sentence(self, idxs):
+    #     return ' '.join([self.itos[int(i)] for i in idxs])
+
+    # def sentence2idxs(self, sentence):
+    #     word = sentence.split()
+    #     return [self.stoi[w] for w in word]
+
+    def idxs2words(self, idxs):
+        '''
+        Return tensor of indexes as a sentence
+        
+        Input:
+        idxs = (torch.LongTensor) 1D tensor contains indexes
+        '''
+        return [self.idx2word(idx, line) for idx, line in idxs]
+
+    # def get_word_vectors(self):
+    #     return self.word_embedding
