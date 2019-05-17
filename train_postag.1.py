@@ -226,6 +226,7 @@ else:
     word_embedding.itos += '<pad>'
     
 word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
+if args.oov_random: word_embedding.word_embedding.weight.requires_grad = True
 
 dataset_size = len(dataset)
 indices = list(range(dataset_size))
@@ -272,7 +273,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
         if not args.continue_model:
-            inputs = Variable(word_embedding.word_embedding(X.to(device)), requires_grad=True)
+            inputs = Variable(X.to(device), requires_grad=True)
+            embeddings = Variable(inputs)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
             idxs = char_embed.char_sents_split(words).to(device)
@@ -317,7 +319,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     accuracy = 0.
     for it, (X, y) in enumerate(validation_loader):
         if not args.continue_model:
-            inputs = Variable(word_embedding.word_embedding(X.to(device)))
+            inputs = Variable(X.to(device), requires_grad=True)
+            embeddings = Variable(inputs)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
             idxs = char_embed.char_sents_split(words).to(device)
@@ -366,7 +369,8 @@ model.eval()
 accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):
     if not args.continue_model:
-        inputs = Variable(word_embedding.word_embedding(X.to(device)))
+        inputs = Variable(X.to(device), requires_grad=True)
+        embeddings = Variable(inputs)
     else:
         words = [word_embedding.idxs2words(x) for x in X]
         idxs = char_embed.char_sents_split(words).to(device)
