@@ -258,7 +258,7 @@ else:
     optimizer = optim.SGD(postagger.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 criterion = nn.NLLLoss()
 
-postagger.apply(init_weights)
+# postagger.apply(init_weights)
 step = 0
 
 print('before training')
