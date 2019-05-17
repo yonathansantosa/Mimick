@@ -326,7 +326,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             mask = (X <= original_vocab_len).type(torch.FloatTensor).unsqueeze(2).to(device)
             pretrained_embeddings = word_embedding.word_embedding(X.to(device))
             generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
-            embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
+            embeddings = mask * pretrained_embeddings + (1-mask) * -1 * generated_embeddings
         target = Variable(y).to(device)
         # output = postagger.forward(w_embedding).permute(0, 2, 1)
         output, validation_loss = postagger.validation(embeddings, target)
@@ -376,7 +376,7 @@ for it, (X, y) in enumerate(validation_loader):
         mask = (X <= original_vocab_len).type(torch.FloatTensor).unsqueeze(2).to(device)
         pretrained_embeddings = word_embedding.word_embedding(X.to(device))
         generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
-        embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
+        embeddings = mask * pretrained_embeddings + (1-mask) * -1 * generated_embeddings
     target = Variable(y).to(device)
     # output = postagger.forward(w_embedding).permute(0, 2, 1)
     output, _ = postagger.validation(embeddings, target)
