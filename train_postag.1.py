@@ -158,10 +158,7 @@ else:
 model.to(device)
 model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 
-if args.continue_model:
-    model.train()
-else:
-    model.eval()
+model.eval()
 
 #* Creating PT data samplers and loaders:
 original_vocab_len = len(word_embedding)
@@ -283,7 +280,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             mask = (X <= original_vocab_len).type(torch.FloatTensor).unsqueeze(2).to(device)
             pretrained_embeddings = word_embedding.word_embedding(X.to(device))
             generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
-            embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
+            embeddings = mask * pretrained_embeddings + (1-mask) * -1 * generated_embeddings
 
         target = Variable(y).to(device)
         output, loss = postagger.forward(embeddings, target)
