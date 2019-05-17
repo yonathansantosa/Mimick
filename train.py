@@ -153,7 +153,7 @@ args = parser.parse_args()
 # if os.path.exists('logs/%s' % args.model): shutil.rmtree('./logs/%s/' % args.model)
 
 cloud_dir = '/content/gdrive/My Drive/train_dropout/'
-saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
+saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.embedding)
 logger_dir = '%s/logs/run%s/' % (saved_model_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_model_path, args.run)
 # logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_model_path, args.run)
@@ -450,7 +450,7 @@ for it, (X, y) in enumerate(train_loader):
         f.write('%s ' % w)
         f.write('%s\n' % ' '.join(map(str,[weight for weight in e.data.cpu().tolist()])))
 
-
+mse_loss = 0.
 for it, (X, target) in enumerate(validation_loader):
     words = dataset.idxs2words(X)
     idxs = char_embed.char_split(words).to(device)
@@ -473,7 +473,7 @@ for it, (X, target) in enumerate(validation_loader):
         print('%.4f | ' % loss_dist.item() + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
             
     if it > 3: break
-
+print('loss = %.4f' % mse_loss)
 # random_embedding = torch.zeros(emb_dim).tolist()
 # f.write('<unk> ')
 # f.write('%s\n' % ' '.join(map(str,[weight for weight in random_embedding])))

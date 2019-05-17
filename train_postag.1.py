@@ -71,8 +71,8 @@ args = parser.parse_args()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 cloud_dir = '/content/gdrive/My Drive/train_dropout/'
-saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.loss_fn)
-saved_postag_path = 'trained_model_%s_%s_%s_postag' % (args.lang, args.model, args.loss_fn)
+saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.embedding)
+saved_postag_path = 'trained_model_%s_%s_%s_postag' % (args.lang, args.model, args.embedding)
 logger_dir = '%s/logs/run%s/' % (saved_postag_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)
 logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_postag_path, args.run)
@@ -258,7 +258,7 @@ else:
     optimizer = optim.SGD(postagger.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 criterion = nn.NLLLoss()
 
-if args.init_weight: postagger.apply(init_weights)
+postagger.apply(init_weights)
 step = 0
 
 print('before training')
