@@ -284,10 +284,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             pretrained_embeddings = word_embedding.word_embedding(X.to(device))
             generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
             embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
-            if it == 0:
-                print(pretrained_embeddings.shape)
-                print(generated_embeddings.shape)
-                print(embeddings.shape)
+            
+            print(pretrained_embeddings.shape)
+            print(generated_embeddings.shape)
+            print(embeddings.shape)
 
         target = Variable(y).to(device)
         output, loss = postagger.forward(embeddings, target)
