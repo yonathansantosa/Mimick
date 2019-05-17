@@ -273,7 +273,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
         if not args.continue_model:
-            inputs = Variable(X.to(device), requires_grad=True)
+            inputs = Variable(X).to(device)        
             embeddings = Variable(inputs)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
@@ -319,7 +319,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     accuracy = 0.
     for it, (X, y) in enumerate(validation_loader):
         if not args.continue_model:
-            inputs = Variable(X.to(device), requires_grad=True)
+            inputs = Variable(X).to(device)
             embeddings = Variable(inputs)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
@@ -369,7 +369,7 @@ model.eval()
 accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):
     if not args.continue_model:
-        inputs = Variable(X.to(device), requires_grad=True)
+        inputs = Variable(X).to(device)
         embeddings = Variable(inputs)
     else:
         words = [word_embedding.idxs2words(x) for x in X]
