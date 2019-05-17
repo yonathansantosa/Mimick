@@ -273,8 +273,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
         if not args.continue_model:
-            inputs = Variable(X).to(device)        
-            embeddings = Variable(inputs)
+            inputs = Variable(X).to(device)
+            embeddings = word_embedding.word_embedding(inputs)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
             idxs = char_embed.char_sents_split(words).to(device)
@@ -284,10 +284,6 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             pretrained_embeddings = word_embedding.word_embedding(X.to(device))
             generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
             embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
-            
-            print(pretrained_embeddings.shape)
-            print(generated_embeddings.shape)
-            print(embeddings.shape)
 
         target = Variable(y).to(device)
         output, loss = postagger.forward(embeddings, target)
@@ -324,7 +320,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(validation_loader):
         if not args.continue_model:
             inputs = Variable(X).to(device)
-            embeddings = Variable(inputs)
+            embeddings = word_embedding.word_embedding(inputs)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
             idxs = char_embed.char_sents_split(words).to(device)
@@ -374,7 +370,7 @@ accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):
     if not args.continue_model:
         inputs = Variable(X).to(device)
-        embeddings = Variable(inputs)
+        embeddings = word_embedding.word_embedding(inputs)
     else:
         words = [word_embedding.idxs2words(x) for x in X]
         idxs = char_embed.char_sents_split(words).to(device)
