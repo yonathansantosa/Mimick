@@ -168,60 +168,45 @@ new_word = []
 oov = 0
 invocab = 0
 tagged_words = set([word for word, _ in dataset.tagged_words])
-if not args.continue_model:
-    for word in tagged_words:
+for word in tagged_words:
+    if word not in word_embedding.stoi:
+        word_embedding.stoi[word] = len(word_embedding.stoi)
+        word_embedding.itos += word
         if args.oov_random:
-            if word not in word_embedding.stoi:
-                new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
-                word_embedding.stoi[word] = len(word_embedding.stoi)
-                word_embedding.itos += word
-                oov += 1
-            else:
-                invocab += 1
+            new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
+        elif args.continue_model:
+            new_word += [torch.zeros(emb_dim, dtype=torch.float)]
         else:
-            if word not in word_embedding.stoi:
-                inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
-                if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-                output = model.forward(inputs).detach()
-                word_embedding.stoi[word] = len(word_embedding.stoi)
-                word_embedding.itos += word
-                new_word += [output.cpu()]
-                oov += 1
-            else:
-                invocab += 1
-else:
-    for word in tagged_words:
-        if word not in word_embedding.stoi: 
+            inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
+            if args.model != 'lstm': inputs = inputs.unsqueeze(1)
+            output = model.forward(inputs).detach()
             word_embedding.stoi[word] = len(word_embedding.stoi)
             word_embedding.itos += word
-            new_word += [torch.zeros(emb_dim, dtype=torch.float)]
-            oov += 1
-        else:
-            invocab += 1
+            new_word += [output.cpu()]
+        oov += 1
+    else:
+        invocab += 1
 
 print('oov = %d' % oov)
 print('invocab = %d' % invocab)
 
-
 if args.oov_random:
     new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
     new_word = torch.stack(new_word).squeeze()
-    word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
-    word_embedding.itos += '<pad>'
+elif args.continue_model:
+    new_word += [torch.zeros(emb_dim, dtype=torch.float)]
 else:
-    if not args.continue_model:
-        inputs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
-        if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-        output = model.forward(inputs).detach()                    
-        new_word += [output.cpu()]
-        new_word = torch.stack(new_word).squeeze()
-    else:
-        new_word += [torch.zeros(emb_dim, dtype=torch.float)]
-        new_word = torch.stack(new_word).squeeze()
-        
-    word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
-    word_embedding.itos += '<pad>'
+    inputs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
+    if args.model != 'lstm': inputs = inputs.unsqueeze(1)
+    output = model.forward(inputs).detach()                    
+    new_word += [output.cpu()]
     
+new_word = torch.stack(new_word).squeeze()
+new_word = torch.stack(new_word).squeeze()
+        
+word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
+word_embedding.itos += '<pad>'
+
 word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
 if args.oov_random: word_embedding.word_embedding.weight.requires_grad = True
 
