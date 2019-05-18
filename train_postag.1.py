@@ -202,7 +202,6 @@ else:
     new_word += [output.cpu()]
     
 new_word = torch.stack(new_word).squeeze()
-new_word = torch.stack(new_word).squeeze()
         
 word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
 word_embedding.itos += '<pad>'
