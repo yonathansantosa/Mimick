@@ -1,3 +1,4 @@
+#region init
 import nltk
 import numpy as np
 from nltk.corpus import brown
@@ -66,7 +67,9 @@ parser.add_argument('--tagset', default='brown')
 parser.add_argument('--continue_model', default=False, action='store_true')
 
 args = parser.parse_args()
+#endregion
 
+#region config
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -78,13 +81,15 @@ logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)
 logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_postag_path, args.run)
 
 if not args.local:
-    # logger_dir = cloud_dir + logger_dir
+# logger_dir = cloud_dir + logger_dir
     saved_model_path = cloud_dir + saved_model_path
     saved_postag_path = cloud_dir + saved_postag_path
-    
+
 logger = Logger(logger_dir)
 logger_val = Logger(logger_val_dir)
+#endregion
 
+#region parameters
 # *Parameters
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
@@ -106,7 +111,9 @@ weight_decay = float(args.weight_decay)
 momentum = float(args.momentum)
 multiplier = float(args.multiplier)
 classif = int(args.classif)
+#endregion
 
+#region model and embedding init
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
 # char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 # char_embed.embed.eval()
@@ -157,21 +164,24 @@ else:
 
 model.to(device)
 model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
+#endregion
 
 model.eval()
 
+dataset = Postag(word_embedding)
+
+#region creating vocab entries
 #* Creating PT data samplers and loaders:
 original_vocab_len = len(word_embedding)
 print('total word = %d' % len(word_embedding))
-dataset = Postag(word_embedding)
 new_word = []
 oov = 0
 invocab = 0
-tagged_words = set([word for word, _ in dataset.tagged_words])
-for word in tagged_words:
+# tagged_words = set([word for word, _ in dataset.tagged_words])
+for word, _ in dataset.tagged_words:
     if word not in word_embedding.stoi:
         word_embedding.stoi[word] = len(word_embedding.stoi)
-        word_embedding.itos += word
+        word_embedding.itos += [word]
         if args.oov_random:
             new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
         elif args.continue_model:
@@ -180,8 +190,6 @@ for word in tagged_words:
             inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
             if args.model != 'lstm': inputs = inputs.unsqueeze(1)
             output = model.forward(inputs).detach()
-            word_embedding.stoi[word] = len(word_embedding.stoi)
-            word_embedding.itos += word
             new_word += [output.cpu()]
         oov += 1
     else:
@@ -204,11 +212,13 @@ else:
 new_word = torch.stack(new_word).squeeze()
         
 word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
-word_embedding.itos += '<pad>'
+word_embedding.itos += ['<pad>']
+#endregion
 
 word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
 if args.oov_random: word_embedding.word_embedding.weight.requires_grad = True
 
+#region train val split and loader
 dataset_size = len(dataset)
 indices = list(range(dataset_size))
 split = int(np.floor(validation_split * dataset_size))
@@ -225,7 +235,7 @@ train_loader = DataLoader(dataset, batch_size=batch_size,
                                 sampler=train_sampler)
 validation_loader = DataLoader(dataset, batch_size=val_batch_size,
                                 sampler=valid_sampler)
-
+#endregion
 
 postagger = Postagger_adaptive(seq_len, emb_dim, 20, len(dataset.tagset)).to(device)
 
@@ -250,19 +260,20 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
 # for epoch in range(int(args.epoch), max_epoch):
     loss_item = 0.
     postagger.train()
+    
     if args.continue_model: model.train()
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
         if not args.continue_model:
-            inputs = Variable(X).to(device)
-            embeddings = word_embedding.word_embedding(inputs)
+            inputs = X.to(device)
+            embeddings = Variable(word_embedding.word_embedding(inputs), requires_grad=True)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
             idxs = char_embed.char_sents_split(words).to(device)
             if args.model != 'lstm': idxs = idxs.unsqueeze(1)
             inputs = Variable(idxs)
             mask = (X < original_vocab_len).type(torch.FloatTensor).unsqueeze(2).to(device)
-            pretrained_embeddings = word_embedding.word_embedding(X.to(device))
+            pretrained_embeddings = word_embedding.word_embedding(Variable(X).to(device))
             generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
             embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
 
@@ -283,7 +294,6 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 logger.scalar_summary(tag, value, step)
         
         loss.backward()
-
         optimizer.step()
         optimizer.zero_grad()
     if not args.local:
