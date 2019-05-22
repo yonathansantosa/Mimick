@@ -178,7 +178,7 @@ new_word = []
 oov = 0
 invocab = 0
 tagged_words = set([word for word, _ in dataset.tagged_words])
-for word, _ in tagged_words:
+for word in tagged_words:
     if word not in word_embedding.stoi:
         word_embedding.stoi[word] = len(word_embedding.stoi)
         word_embedding.itos += [word]
