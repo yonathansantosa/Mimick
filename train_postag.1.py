@@ -124,7 +124,7 @@ if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.tx
 emb_dim = word_embedding.emb_dim
 
 if args.model == 'lstm':
-    model = mimick(char_embed.embed, char_embed.char_emb_dim, char_embed.embed, emb_dim, int(args.num_feature))
+    model = mimick(char_embed.embed, char_embed.char_emb_dim, emb_dim, int(args.num_feature))
 elif args.model == 'cnn2':
     model = mimick_cnn2(
         embedding=char_embed.embed,
@@ -177,8 +177,8 @@ print('total word = %d' % len(word_embedding))
 new_word = []
 oov = 0
 invocab = 0
-# tagged_words = set([word for word, _ in dataset.tagged_words])
-for word, _ in dataset.tagged_words:
+tagged_words = set([word for word, _ in dataset.tagged_words])
+for word, _ in tagged_words:
     if word not in word_embedding.stoi:
         word_embedding.stoi[word] = len(word_embedding.stoi)
         word_embedding.itos += [word]
