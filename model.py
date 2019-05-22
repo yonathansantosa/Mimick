@@ -10,7 +10,7 @@ import math
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class mimick(nn.Module):
-    def __init__(self, embedding, char_emb_dim, char_emb, emb_dim, hidden_size):
+    def __init__(self, embedding, char_emb_dim,emb_dim, hidden_size):
         super(mimick, self).__init__()
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding.weight.data.copy_(embedding.weight.data)
@@ -42,7 +42,7 @@ class mimick_cnn(nn.Module):
         self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim), bias=False)
         self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim), bias=False)
         self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim), bias=False)
-
+        self.inputs = None
 
         self.mlp1 = nn.Sequential(
             nn.Linear(num_feature*6, emb_dim),
@@ -64,7 +64,8 @@ class mimick_cnn(nn.Module):
         )
 
     def forward(self, inputs):
-        x = self.embedding(inputs).float()
+        self.inputs = inputs
+        x = self.embedding(self.inputs).float()
         x2 = self.conv2(x).relu().squeeze(-1)
         x3 = self.conv3(x).relu().squeeze(-1)
         x4 = self.conv4(x).relu().squeeze(-1)
@@ -126,7 +127,7 @@ class mimick_cnn2(nn.Module):
         x2_conv2 = self.conv2(x2_max1).relu()
         x2_max2 = F.max_pool1d(x2_conv2, 2)
         x2_conv3 = self.conv3(x2_max2).relu()
-        x2_max3 = F.max_pool1d(x2_conv3, 2).squeeze(-1)
+        x2_max3 = F.max_pool1d(x2_conv3, x2_conv3.shape[2]).squeeze(-1)
 
         # maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=2).view(inputs.size(0), -1)
 

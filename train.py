@@ -194,8 +194,6 @@ multiplier = float(args.multiplier)
 classif = int(args.classif)
 
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
-# if args.load or int(args.run) > 1:
-#     char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
 
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 emb_dim = dataset.emb_dim
@@ -223,7 +221,7 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size,
 
 #* Initializing model
 if args.model == 'lstm':
-    model = mimick(char_embed.embed, char_embed.char_emb_dim, char_embed.embed, dataset.emb_dim, int(args.num_feature))
+    model = mimick(char_embed.embed, char_embed.char_emb_dim, dataset.emb_dim, int(args.num_feature))
 elif args.model == 'cnn2':
     model = mimick_cnn2(
         embedding=char_embed.embed,
@@ -271,8 +269,6 @@ if args.loss_fn == 'mse':
 else:
     criterion = nn.CosineSimilarity()
 
-criterion1 = nn.CosineSimilarity()
-
 if run < 1:
     args.run = '1'
 
@@ -281,7 +277,6 @@ if run != 1:
 
 if args.load:
     model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
-    # char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
     
 elif not os.path.exists(saved_model_path):
     os.makedirs(saved_model_path)
@@ -292,7 +287,6 @@ optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, n
 if args.init_weight: model.apply(init_weights)
 
 step = 0
-# print(model.modules())
 # *Training
 
 for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
@@ -360,7 +354,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 model.train()
                 tqdm.write('')
     
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
     model.eval()
     # conv2weight -= model.conv2.weight.data
     # mlpweight -= model.mlp[2].weight.data
@@ -376,7 +370,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     if not args.local:
         copy_tree(logger_dir, cloud_dir+logger_dir)
         
-    torch.save(model.state_dict(), '%s/%s.pth' % (saved_model_path, args.model))
+    torch.save(model.state_dict(), f'{saved_model_path}/{args.model}.pth')
     # torch.save(model.embedding.state_dict(), '%s/charembed.pth' % saved_model_path)
 
     mse_loss = 0.
