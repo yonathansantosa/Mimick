@@ -117,7 +117,7 @@ class Postag_word:
         self.count_bin = torch.zeros(len(self.tagset))
         self.idxs = torch.zeros(1)
 
-        for word, tag in self.tagged_words:
+        for _, tag in self.tagged_words:
             if tag in self.tagset.toti:
                 self.count_bin[self.tagset.tag2idx(tag)] += 1
             else:
@@ -188,7 +188,6 @@ class Postagger_adaptive(nn.Module):
         self.seq_length = seq_length
         self.lstm = nn.LSTM(emb_dim, self.hidden_size, 1, bidirectional=True, batch_first=True)
         self.lstm.flatten_parameters()
-        
         self.out = nn.AdaptiveLogSoftmaxWithLoss(hidden_size, output_size, cutoffs=[round(output_size/5),2*round(output_size/5)], div_value=4)
         
     def forward(self, inputs, targets):
@@ -196,8 +195,7 @@ class Postagger_adaptive(nn.Module):
         out, _ = self.lstm(inputs)
 
         output = out[:, :, :self.hidden_size] + out[:, :, self.hidden_size:]
-
-        output = output.view(output.shape[0]*output.shape[1], -1)
+        output = output.contiguous().view(output.shape[0]*output.shape[1], output.shape[2])
         targets = targets.view(targets.shape[0]*targets.shape[1])
 
         return self.out(output, targets)
@@ -207,8 +205,7 @@ class Postagger_adaptive(nn.Module):
         out, _ = self.lstm(inputs)
 
         output = out[:, :, :self.hidden_size] + out[:, :, self.hidden_size:]
-
-        output = output.view(output.shape[0]*output.shape[1], -1)
+        output = output.contiguous().view(output.shape[0] * output.shape[1], -1)
         targets = targets.view(targets.shape[0]*targets.shape[1])
 
         prediction = self.out.predict(output)
