@@ -71,3 +71,4 @@ trained_model_en_lstm_word2vec/val-run4/events.out.tfevents.1557185998.284e32c01
 trained_model_en_lstm_word2vec/val-run5/events.out.tfevents.1557213327.9324cba2da3c
 trained_model_en_lstm_word2vec/val-run6/events.out.tfevents.1557216311.9324cba2da3c
 .vector_cache/GoogleNews-vectors-negative300.bin.gz.txt
+.mypy_cache
