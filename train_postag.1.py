@@ -200,7 +200,6 @@ print('invocab = %d' % invocab)
 
 if args.oov_random:
     new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
-    new_word = torch.stack(new_word).squeeze()
 elif args.continue_model:
     new_word += [torch.zeros(emb_dim, dtype=torch.float)]
 else:
@@ -214,7 +213,6 @@ new_word = torch.stack(new_word).squeeze()
 word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
 word_embedding.itos += ['<pad>']
 #endregion
-
 word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
 if args.oov_random: word_embedding.word_embedding.weight.requires_grad = True
 
