@@ -458,16 +458,14 @@ for it, (X, target) in enumerate(validation_loader):
     for w, e in zip(words,output):
         f.write('%s ' % w)
         f.write('%s\n' % ' '.join(map(str,[weight for weight in e.data.cpu().tolist()])))
-    mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
+    mse_loss += (((output-target)**2).sum() / ((dataset_size-split))).sum()
     distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
-    for i, word in enumerate(X):
-        if i >= 3: break
-        loss_dist = torch.dist(output[i], target[i])
-        
-        print('%.4f | ' % loss_dist.item() + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+    if it < 3:
+        for i, word in enumerate(X):
+            loss_dist = torch.dist(output[i], target[i])
             
-    if it > 3: break
-print('loss = %.4f' % mse_loss)
+            print('%.4f | ' % loss_dist.item() + dataset.idx2word(word) + '\t=> ' + dataset.idxs2sentence(nearest_neighbor[i]))
+print('loss = %.4f' % torch.sqrt(mse_loss).item())
 # random_embedding = torch.zeros(emb_dim).tolist()
 # f.write('<unk> ')
 # f.write('%s\n' % ' '.join(map(str,[weight for weight in random_embedding])))
