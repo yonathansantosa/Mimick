@@ -32,7 +32,11 @@ class Word_embedding:
             self.embedding_vectors = torch.from_numpy(polyglot_emb.vectors)
             self.stoi = polyglot_emb.vocabulary.word_id
             self.itos = [polyglot_emb.vocabulary.id_word[i] for i in range(len(polyglot_emb.vocabulary.id_word))]
-        
+        elif embedding == 'dict2vec':
+            word2vec = Vectors('dict2vec-vectors-dim100.vec')
+            self.embedding_vectors = word2vec.vectors
+            self.stoi = word2vec.stoi
+            self.itos = word2vec.itos
         self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=True, sparse=True)
         self.emb_dim = self.embedding_vectors.size(1)
         
